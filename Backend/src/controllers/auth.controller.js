@@ -1,15 +1,33 @@
 import UserModel from '../models/user.model.js';
 import jwt from 'jsonwebtoken';
 import {config} from '../config/config.js'
-async function sendTokenRequest(user,res){
+async function sendTokenRequest(user,res,message){
       const Token = jwt.sign({
         id:user._id
-      },config.JWT_SECRET)
-      
+      },config.JWT_SECRET,{
+        expiresIn:"7d"
+      })
+       res.cookie("token",Token);
+
+    res.status(200).json({
+        message,
+        success:true,
+        Token,
+
+        user:{
+            id:user._id,
+            email:user._email,
+            contact:user.contact,
+            fullname:user.fullname,
+            role:user.role
+        }
+     
+
+    })
 }
 
 export async function RegisterController(req,res){
-   const {email, password, fullname,contact,role}  = req.body();
+   const {email, password, fullname,contact,isSeller}  = req.body();
 
    try{
        const existUser = await UserModel.findOne({
@@ -29,8 +47,10 @@ export async function RegisterController(req,res){
           password,
           fullname,
           contact,
-          role
+          role: isSeller? "seller": "buyer",
        })
+
+       await sendTokenRequest(user,res,"user register successfully")
    }
    catch(err){
     console.log(err);

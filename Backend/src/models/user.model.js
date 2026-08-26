@@ -2,24 +2,24 @@ import mongoose  from "mongoose";
 import bcrypt from 'bcrypt'
 const UserSchema = new mongoose.Schema({
     email:{
-        type:string,
+        type:String,
         required:true,
         unique:true
     },
     contact:{
-        type:string,
+        type:String,
         required:true
     },
     password:{
-        type:string,
+        type:String,
         required:true
     },
     fullname:{
-        type:string,
+        type:String,
         required:true
     },
     role:{
-        type:string,
+        type:String,
         enum:["buyer","seller"],
         default:"buyer"
     }
