@@ -18,10 +18,18 @@ export const validateRegisterUser = [
     body("password")
     .isLength({min:6}).withMessage("the password should be at least 6 characters long."),
     body("fullname")
-    .isEmpty().withMessage("the full name is required")
+    .notEmpty().withMessage("the full name is required")
     .isLength({min:3}).withMessage("the fullname must be at least 3 character long"),
      body("isSeller")
      .isBoolean().withMessage("the seller should be in the  boolean"),
      
+    validateRequest
+]
+
+export const validateLoginUser = [
+    body("email").isEmail().withMessage("invalid email"),
+    body("password").notEmpty().withMessage("password is required"),
+
+
     validateRequest
 ]

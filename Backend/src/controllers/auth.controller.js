@@ -9,14 +9,14 @@ async function sendTokenRequest(user,res,message){
       })
        res.cookie("token",Token);
 
-    res.status(200).json({
+  return res.status(200).json({
         message,
         success:true,
         Token,
 
         user:{
             id:user._id,
-            email:user._email,
+            email:user.email,
             contact:user.contact,
             fullname:user.fullname,
             role:user.role
@@ -27,7 +27,7 @@ async function sendTokenRequest(user,res,message){
 }
 
 export async function RegisterController(req,res){
-   const {email, password, fullname,contact,isSeller}  = req.body();
+   const {email, password, fullname,contact,isSeller}  = req.body;
 
    try{
        const existUser = await UserModel.findOne({
@@ -58,4 +58,38 @@ export async function RegisterController(req,res){
         message:"Server Error"
     })
    }
+}
+
+export async function LoginController(req,res){
+    const {email,password} = req.body;
+
+    try{
+        const userExists = await UserModel.findOne({
+            email
+        });
+
+        if(!userExists){
+            return res.status(404).json({
+                success:false,
+                message:"The user is not found"
+            });
+        }
+
+        const isMatch = await userExists.comparePassword(password);
+        if(!isMatch){
+            return res.status(400).json({
+                success:false,
+                message:"Invalid username or password"
+            });
+        }
+
+        await sendTokenRequest(userExists, res, "User logged in successfully");
+    }
+    catch(err){
+        console.log(err);
+        return res.status(500).json({
+            success: false,
+            message: "Server Error"
+        });
+    }
 }
