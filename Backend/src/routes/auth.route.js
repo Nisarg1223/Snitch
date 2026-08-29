@@ -8,4 +8,6 @@ const authrouter = Router();
 
 authrouter.post('/register',validateRegisterUser,RegisterController);
 authrouter.post('/login',validateLoginUser,LoginController);
+authrouter.get("/google", passport.authenticate("google",{scope:["profile","email"]}));
+authrouter.get("/google/callback",passport.authenticate("google",{session:false}))
 export default authrouter;

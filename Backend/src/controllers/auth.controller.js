@@ -93,3 +93,9 @@ export async function LoginController(req,res){
         });
     }
 }
+
+export async function googleCallback(req,res){
+    console.log(req.user);
+
+    res.redirect("http://localhost:5173/dashboard")
+}
