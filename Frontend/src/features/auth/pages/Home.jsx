@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { setUser } from '../state/auth.slice.js';
@@ -6,6 +6,20 @@ import { setUser } from '../state/auth.slice.js';
 const Home = () => {
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const userParam = params.get('user');
+    if (userParam) {
+      try {
+        const parsedUser = JSON.parse(decodeURIComponent(userParam));
+        dispatch(setUser(parsedUser));
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } catch (e) {
+        console.error("Failed to parse user from OAuth redirect:", e);
+      }
+    }
+  }, [dispatch]);
 
   const handleLogout = () => {
     dispatch(setUser(null));

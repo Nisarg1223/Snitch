@@ -177,7 +177,9 @@ const Login = () => {
             <button
               type="button"
               className="google-btn"
-              onClick={() => alert('Google authentication flow')}
+              onClick={() => {
+                window.location.href = 'http://localhost:3000/api/auth/google';
+              }}
             >
               <svg className="google-icon" viewBox="0 0 24 24">
                 <path

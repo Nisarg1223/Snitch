@@ -6,7 +6,7 @@ export function useAuth() {
   const dispatch = useDispatch();
   const { user, loading, error } = useSelector((state) => state.auth);
 
-  async function handleRegister({ email, contact, password, fullname, isSeller = false}) {
+  async function handleRegister({ email, contact, password, fullname, isSeller = false }) {
     try {
       dispatch(setLoading(true));
       dispatch(setError(null));
