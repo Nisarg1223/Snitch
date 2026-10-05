@@ -7,6 +7,7 @@ import jwt from 'jsonwebtoken';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import User from './models/user.model.js';
 import authrouter from './routes/auth.route.js';
+import productRouter from './routes/products.route.js';
 
 dotenv.config();
 
@@ -104,5 +105,5 @@ app.get('/api/auth/google/callback',
 );
 
 app.use('/api/auth', authrouter);
-
+app.use('/api/products',productRouter);
 export default app;
