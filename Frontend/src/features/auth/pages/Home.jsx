@@ -70,22 +70,43 @@ const Home = () => {
               {user.contact && <p style={{ margin: '0.35rem 0' }}><strong>Contact:</strong> {user.contact}</p>}
             </div>
 
-            <button
-              onClick={handleLogout}
-              style={{
-                backgroundColor: '#18181b',
-                color: '#ffffff',
-                border: 'none',
-                padding: '0.75rem 1.75rem',
-                borderRadius: '9999px',
-                fontSize: '0.92rem',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'opacity 0.2s'
-              }}
-            >
-              Log Out
-            </button>
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <Link
+                to="/create-product"
+                style={{
+                  backgroundColor: '#ff9900',
+                  color: '#0f1111',
+                  textDecoration: 'none',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '9999px',
+                  fontSize: '0.92rem',
+                  fontWeight: '700',
+                  boxShadow: '0 2px 5px rgba(213, 97, 0, 0.3)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <span>📦</span> Create Product (Amazon Seller)
+              </Link>
+
+              <button
+                onClick={handleLogout}
+                style={{
+                  backgroundColor: '#18181b',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '9999px',
+                  fontSize: '0.92rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'opacity 0.2s'
+                }}
+              >
+                Log Out
+              </button>
+            </div>
           </div>
         ) : (
           <div>
