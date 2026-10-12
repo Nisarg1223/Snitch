@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useProduct } from '../hooks/useProduct.js';
 import { Link, useNavigate } from 'react-router-dom';
 import './CreateProduct.css';
@@ -246,7 +246,7 @@ const CreateProduct = () => {
         {/* Secondary Category Navigation */}
         <nav className="amz-header-nav">
           <span className="amz-nav-item active">Catalog ▾</span>
-          <span className="amz-nav-item">Inventory ▾</span>
+          <Link to="/seller/dashboard" className="amz-nav-item" style={{ textDecoration: 'none', color: '#ffffff' }}>Inventory ▾</Link>
           <span className="amz-nav-item">Pricing ▾</span>
           <span className="amz-nav-item">Orders ▾</span>
           <span className="amz-nav-item">Advertising ▾</span>
@@ -912,9 +912,9 @@ const CreateProduct = () => {
               <button
                 type="button"
                 className="amz-btn-primary"
-                onClick={() => navigate('/')}
+                onClick={() => navigate('/seller/dashboard')}
               >
-                Go to Dashboard
+                Go to Seller Dashboard
               </button>
             </div>
           </div>

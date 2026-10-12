@@ -1,12 +1,18 @@
-import { RegisterService, LoginService } from "../service/auth.api.js";
+import { RegisterService, LoginService, getMe } from "../service/auth.api.js";
 import { setUser, setLoading, setError } from "../state/auth.slice.js";
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector } from "react-redux";
 
 export function useAuth() {
   const dispatch = useDispatch();
   const { user, loading, error } = useSelector((state) => state.auth);
 
-  async function handleRegister({ email, contact, password, fullname, isSeller = false }) {
+  async function handleRegister({
+    email,
+    contact,
+    password,
+    fullname,
+    isSeller = false,
+  }) {
     try {
       dispatch(setLoading(true));
       dispatch(setError(null));
@@ -20,7 +26,10 @@ export function useAuth() {
       dispatch(setUser(data.user));
       return data;
     } catch (err) {
-      const errorMsg = err.response?.data?.message || err.response?.data?.errors?.[0]?.msg || err.message;
+      const errorMsg =
+        err.response?.data?.message ||
+        err.response?.data?.errors?.[0]?.msg ||
+        err.message;
       dispatch(setError(errorMsg));
       throw err;
     } finally {
@@ -34,12 +43,15 @@ export function useAuth() {
       dispatch(setError(null));
       const data = await LoginService({
         email,
-        password
+        password,
       });
       dispatch(setUser(data.user));
       return data;
     } catch (err) {
-      const errorMsg = err.response?.data?.message || err.response?.data?.errors?.[0]?.msg || err.message;
+      const errorMsg =
+        err.response?.data?.message ||
+        err.response?.data?.errors?.[0]?.msg ||
+        err.message;
       dispatch(setError(errorMsg));
       throw err;
     } finally {
@@ -47,5 +59,19 @@ export function useAuth() {
     }
   }
 
-  return { handleRegister, handleLogin, user, loading, error };
+  async function handleGetMe() {
+    try {
+      dispatch(setLoading(true));
+      const data = await getMe();
+
+      dispatch(setUser(data.user));
+      
+    } catch (err) {
+      console.log(err);
+    }
+    finally{
+       dispatch(setLoading(false));
+    }
+  }
+  return { handleRegister, handleLogin, handleGetMe, user, loading, error };
 }

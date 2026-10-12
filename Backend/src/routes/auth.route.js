@@ -8,6 +8,8 @@ import {
     getMeController,
     LogoutController
 } from '../controllers/auth.controller.js';
+import { authenticateUser } from '../middlewares/auth.middleware.js';
+import { getMe } from '../controllers/product.controller.js';
 
 const authrouter = Router();
 
@@ -17,5 +19,5 @@ authrouter.get('/me', getMeController);
 authrouter.post('/logout', LogoutController);
 authrouter.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 authrouter.get('/google/callback', passport.authenticate('google', { session: false }), googleCallback);
-
+authrouter.get('/me',authenticateUser,getMe)
 export default authrouter;

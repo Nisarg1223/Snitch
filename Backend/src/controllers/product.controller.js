@@ -44,3 +44,27 @@ export async function getSellerProducts(req,res){
       products
    })
 }
+
+export async function getMe(req,res){
+   const user = req.user;
+
+   if(!user){
+      return res.status(401).json({
+         message:"not found"
+      })
+   }
+
+   res.status(200).json({
+      message:"Uer fetched successfully",
+      success:true,
+      user:{
+         id:user._id,
+         email:user.email,
+         contact:user.contact,
+         fullname: user.fullname,
+         role: user.role
+      }
+   });
+
+
+}

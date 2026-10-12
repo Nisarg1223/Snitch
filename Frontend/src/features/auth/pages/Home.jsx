@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { setUser } from '../state/auth.slice.js';
@@ -71,6 +71,25 @@ const Home = () => {
             </div>
 
             <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <Link
+                to="/seller/dashboard"
+                style={{
+                  backgroundColor: '#232f3e',
+                  color: '#ffffff',
+                  textDecoration: 'none',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '9999px',
+                  fontSize: '0.92rem',
+                  fontWeight: '700',
+                  boxShadow: '0 2px 5px rgba(0, 0, 0, 0.25)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <span>📊</span> Seller Dashboard
+              </Link>
+
               <Link
                 to="/create-product"
                 style={{
