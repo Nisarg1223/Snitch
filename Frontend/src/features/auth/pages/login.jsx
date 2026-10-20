@@ -71,7 +71,41 @@ const Login = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+    try {
+      let user;
+      if (isSignUp) {
+        user = await handleRegister({
+          email: formData.email,
+          password: formData.password,
+          contact: formData.contact,
+          fullname: formData.fullname,
+          isSeller: formData.isSeller,
+        });
+      } else {
+        user = await handleLogin({
+          email: formData.email,
+          password: formData.password,
+        });
+      }
 
+      if (user?.role?.toLowerCase() === 'seller') {
+        navigate('/dashboard');
+      } else {
+        navigate('/');
+      }
+    } catch (err) {
+      console.error(isSignUp ? 'Registration failed:' : 'Login failed:', err);
+      const errorMsg =
+        err.response?.data?.message ||
+        err.response?.data?.errors?.[0]?.msg ||
+        err.message ||
+        (isSignUp ? 'Registration failed' : 'Login failed');
+      setErrors((prev) => ({ ...prev, form: errorMsg }));
+    }
+  };
 
   return (
     <div className="auth-page">
