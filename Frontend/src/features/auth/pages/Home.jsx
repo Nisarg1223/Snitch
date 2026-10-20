@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { setUser } from '../state/auth.slice.js';
 
 const Home = () => {
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -15,11 +16,14 @@ const Home = () => {
         const parsedUser = JSON.parse(decodeURIComponent(userParam));
         dispatch(setUser(parsedUser));
         window.history.replaceState({}, document.title, window.location.pathname);
+        if (parsedUser?.role?.toLowerCase() === 'seller') {
+          navigate('/dashboard');
+        }
       } catch (e) {
         console.error("Failed to parse user from OAuth redirect:", e);
       }
     }
-  }, [dispatch]);
+  }, [dispatch, navigate]);
 
   const handleLogout = () => {
     dispatch(setUser(null));
@@ -72,7 +76,7 @@ const Home = () => {
 
             <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
               <Link
-                to="/seller/dashboard"
+                to="/dashboard"
                 style={{
                   backgroundColor: '#232f3e',
                   color: '#ffffff',

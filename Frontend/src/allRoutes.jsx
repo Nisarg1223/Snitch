@@ -13,7 +13,7 @@ const AllRoutes = () => {
       <Route
         path="/dashboard"
         element={
-          <Protected>
+          <Protected role="seller">
             <Dashboard />
           </Protected>
         }
@@ -21,7 +21,7 @@ const AllRoutes = () => {
       <Route
         path="/seller/dashboard"
         element={
-          <Protected>
+          <Protected role="seller">
             <Dashboard />
           </Protected>
         }
@@ -29,7 +29,7 @@ const AllRoutes = () => {
       <Route
         path="/create-product"
         element={
-          <Protected>
+          <Protected role="seller">
             <CreateProduct />
           </Protected>
         }
@@ -37,7 +37,7 @@ const AllRoutes = () => {
       <Route
         path="/products/create"
         element={
-          <Protected>
+          <Protected role="seller">
             <CreateProduct />
           </Protected>
         }
@@ -45,7 +45,7 @@ const AllRoutes = () => {
       <Route
         path="/seller/products/create"
         element={
-          <Protected>
+          <Protected role="seller">
             <CreateProduct />
           </Protected>
         }

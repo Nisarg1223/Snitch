@@ -24,7 +24,7 @@ export function useAuth() {
         isSeller,
       });
       dispatch(setUser(data.user));
-      return data;
+      return data.user;
     } catch (err) {
       const errorMsg =
         err.response?.data?.message ||
@@ -46,7 +46,7 @@ export function useAuth() {
         password,
       });
       dispatch(setUser(data.user));
-      return data;
+      return data.user;
     } catch (err) {
       const errorMsg =
         err.response?.data?.message ||
