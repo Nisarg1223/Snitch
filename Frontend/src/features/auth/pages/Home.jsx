@@ -488,7 +488,17 @@ const Home = () => {
               : null;
 
             return (
-              <div key={card.id} className="amz-feature-card">
+
+              <div
+                key={card.id}
+                className="amz-feature-card"
+                onClick={() => {
+                  if (hasProduct && prod?._id) {
+                    navigate(`/product/${prod._id}`);
+                  }
+                }}
+                style={{ cursor: hasProduct ? 'pointer' : 'default' }}
+              >
                 <div className="amz-card-header">
                   <h2 className="amz-card-title">{card.title}</h2>
                 </div>
@@ -498,8 +508,9 @@ const Home = () => {
                     <div
                       className="amz-card-single-item"
                       onClick={() => {
-                        setSelectedProduct(prod);
-                        setActiveModalImgIdx(0);
+                        if (prod?._id) {
+                          navigate(`/product/${prod._id}`);
+                        }
                       }}
                     >
                       <div className="amz-card-image-box">
@@ -565,10 +576,10 @@ const Home = () => {
                 <div className="amz-card-footer">
                   <span
                     className="amz-card-action-link"
-                    onClick={() => {
-                      if (hasProduct) {
-                        setSelectedProduct(prod);
-                        setActiveModalImgIdx(0);
+                    onClick={(e) => {
+                      if (hasProduct && prod?._id) {
+                        e.stopPropagation();
+                        navigate(`/product/${prod._id}`);
                       }
                     }}
                   >
@@ -609,9 +620,11 @@ const Home = () => {
                     key={prod._id || index}
                     className="amz-prod-card"
                     onClick={() => {
-                      setSelectedProduct(prod);
-                      setActiveModalImgIdx(0);
+                      if (prod?._id) {
+                        navigate(`/product/${prod._id}`);
+                      }
                     }}
+                    style={{ cursor: 'pointer' }}
                   >
                     {index === 0 && (
                       <div className="amz-badge-choice">
@@ -798,6 +811,28 @@ const Home = () => {
                   }}
                 >
                   Add to Cart
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const id = selectedProduct._id;
+                    setSelectedProduct(null);
+                    navigate(`/product/${id}`);
+                  }}
+                  style={{
+                    width: '100%',
+                    marginTop: '8px',
+                    padding: '9px 14px',
+                    border: '1px solid #d5d9d9',
+                    borderRadius: '20px',
+                    backgroundColor: '#fff',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                  }}
+                >
+                  See Full Product Details →
                 </button>
               </div>
             </div>

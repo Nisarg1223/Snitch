@@ -4,6 +4,7 @@ import Home from './features/auth/pages/Home.jsx'
 import CreateProduct from './features/products/pages/CreateProduct.jsx'
 import Dashboard from './features/products/pages/Dashboard.jsx'
 import Protected from './features/components/Protected.jsx'
+import ProductDetail from './features/products/pages/ProductDetail.jsx'
 
 const AllRoutes = () => {
   return (
@@ -50,6 +51,7 @@ const AllRoutes = () => {
           </Protected>
         }
       />
+      <Route path="/product/:productId" element={<ProductDetail />} />
     </Routes>
   )
 }
