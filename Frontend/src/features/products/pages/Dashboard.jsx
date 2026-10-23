@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useProduct } from '../hooks/useProduct.js';
 import { useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './Dashboard.css';
 
 const CURRENCY_SYMBOLS = {
@@ -32,18 +32,34 @@ const formatDate = (dateString) => {
   }
 };
 
+const resolveImageUrl = (img) => {
+  if (!img) return null;
+  if (typeof img === 'string') return img;
+  if (typeof img === 'object' && img.url) return img.url;
+  return null;
+};
+
 const Dashboard = () => {
+  const navigate = useNavigate();
   const { handleGetSellerProduct } = useProduct();
   const rawSellerProducts = useSelector((state) => state.product.sellerProducts);
   const user = useSelector((state) => state.auth?.user);
+
+  const handleNavigateToProduct = (productId) => {
+    if (productId) {
+      navigate(`/seller/product/${productId}`);
+    }
+  };
 
   // Safely ensure sellerProducts is always an array
   const sellerProducts = useMemo(() => {
     return Array.isArray(rawSellerProducts) ? rawSellerProducts : [];
   }, [rawSellerProducts]);
 
-  // Loading and error states
-  const [loading, setLoading] = useState(true);
+  // Loading and error states - avoid flashing skeletons if data is already in Redux
+  const [loading, setLoading] = useState(
+    () => !Array.isArray(rawSellerProducts) || rawSellerProducts.length === 0
+  );
   const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
 
@@ -61,22 +77,22 @@ const Dashboard = () => {
   useEffect(() => {
     let isMounted = true;
 
-    const loadData = () => {
-      handleGetSellerProduct()
-        .catch((err) => {
-          if (!isMounted) return;
-          console.error('Error fetching seller products:', err);
-          const msg =
-            err?.response?.data?.message ||
-            err?.message ||
-            'Unable to load your seller catalog. Please verify your connection.';
-          setErrorMessage(msg);
-        })
-        .finally(() => {
-          if (isMounted) {
-            setLoading(false);
-          }
-        });
+    const loadData = async () => {
+      try {
+        await handleGetSellerProduct();
+      } catch (err) {
+        if (!isMounted) return;
+        console.error('Error fetching seller products:', err);
+        const msg =
+          err?.response?.data?.message ||
+          err?.message ||
+          'Unable to load your seller catalog. Please verify your connection.';
+        setErrorMessage(msg);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
     };
 
     loadData();
@@ -112,6 +128,7 @@ const Dashboard = () => {
       setErrorMessage(msg);
     } finally {
       setRefreshing(false);
+      setLoading(false);
     }
   };
 
@@ -497,7 +514,7 @@ const Dashboard = () => {
           {/* ==================================================================
               LOADING SKELETON STATE
               ================================================================== */}
-          {loading ? (
+          {loading && sellerProducts.length === 0 ? (
             <div style={{ padding: '1.5rem' }}>
               <div
                 style={{
@@ -583,10 +600,7 @@ const Dashboard = () => {
                 </thead>
                 <tbody>
                   {filteredProducts.map((product, index) => {
-                    const mainImgUrl =
-                      Array.isArray(product.images) && product.images.length > 0
-                        ? product.images[0]?.url
-                        : null;
+                    const mainImgUrl = resolveImageUrl(product.images?.[0]);
                     const imgCount = Array.isArray(product.images)
                       ? product.images.length
                       : 0;
@@ -619,8 +633,9 @@ const Dashboard = () => {
                         <td className="amz-col-thumb">
                           <div
                             className="amz-table-thumb-wrap"
-                            onClick={() => handleOpenModal(product)}
-                            title="Click to view all images"
+                            onClick={() => handleNavigateToProduct(product._id)}
+                            style={{ cursor: 'pointer' }}
+                            title="Click to view product details"
                           >
                             {mainImgUrl ? (
                               <>
@@ -645,7 +660,8 @@ const Dashboard = () => {
                         <td className="amz-col-product">
                           <div
                             className="amz-table-product-title"
-                            onClick={() => handleOpenModal(product)}
+                            onClick={() => handleNavigateToProduct(product._id)}
+                            style={{ cursor: 'pointer' }}
                             title={product.title}
                           >
                             {product.title || 'Untitled Product'}
@@ -695,7 +711,7 @@ const Dashboard = () => {
                             <button
                               type="button"
                               className="amz-btn-action-view"
-                              onClick={() => handleOpenModal(product)}
+                              onClick={() => handleNavigateToProduct(product._id)}
                             >
                               View Details
                             </button>
@@ -721,10 +737,7 @@ const Dashboard = () => {
                 ================================================================== */
             <div className="amz-grid-container">
               {filteredProducts.map((product, index) => {
-                const mainImgUrl =
-                  Array.isArray(product.images) && product.images.length > 0
-                    ? product.images[0]?.url
-                    : null;
+                const mainImgUrl = resolveImageUrl(product.images?.[0]);
                 const imgCount = Array.isArray(product.images)
                   ? product.images.length
                   : 0;
@@ -740,13 +753,11 @@ const Dashboard = () => {
                   <div
                     key={cardKey}
                     className="amz-catalog-card"
+                    onClick={() => handleNavigateToProduct(product._id)}
+                    style={{ cursor: 'pointer' }}
                   >
                     {/* Top image section */}
-                    <div
-                      className="amz-card-image-wrap"
-                      onClick={() => handleOpenModal(product)}
-                      style={{ cursor: 'pointer' }}
-                    >
+                    <div className="amz-card-image-wrap">
                       <div className="amz-card-top-badges">
                         <span className="amz-badge-active">ACTIVE</span>
                         {imgCount > 0 && (
@@ -782,7 +793,6 @@ const Dashboard = () => {
 
                       <h3
                         className="amz-card-title"
-                        onClick={() => handleOpenModal(product)}
                         title={product.title}
                       >
                         {product.title || 'Untitled Product'}
@@ -811,7 +821,10 @@ const Dashboard = () => {
                         <button
                           type="button"
                           className="amz-card-btn-view"
-                          onClick={() => handleOpenModal(product)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleNavigateToProduct(product._id);
+                          }}
                         >
                           View Details
                         </button>
@@ -858,24 +871,25 @@ const Dashboard = () => {
               {/* Left Column: Image Gallery */}
               <div className="amz-modal-gallery">
                 <div className="amz-modal-main-img-wrap">
-                  {Array.isArray(selectedProduct.images) &&
-                  selectedProduct.images.length > 0 ? (
-                    <img
-                      src={
-                        selectedProduct.images[selectedModalImgIndex]?.url ||
-                        selectedProduct.images[0]?.url
-                      }
-                      alt={selectedProduct.title}
-                      className="amz-modal-main-img"
-                    />
-                  ) : (
-                    <div style={{ textAlign: 'center', color: '#888c8c' }}>
-                      <div style={{ fontSize: '3rem' }}>📦</div>
-                      <div style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                        No images uploaded for this listing
+                  {(() => {
+                    const activeModalImg =
+                      resolveImageUrl(selectedProduct.images?.[selectedModalImgIndex]) ||
+                      resolveImageUrl(selectedProduct.images?.[0]);
+                    return activeModalImg ? (
+                      <img
+                        src={activeModalImg}
+                        alt={selectedProduct.title}
+                        className="amz-modal-main-img"
+                      />
+                    ) : (
+                      <div style={{ textAlign: 'center', color: '#888c8c' }}>
+                        <div style={{ fontSize: '3rem' }}>📦</div>
+                        <div style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
+                          No images uploaded for this listing
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
 
                 {/* Thumbnails row if multiple images exist */}
@@ -885,7 +899,7 @@ const Dashboard = () => {
                       {selectedProduct.images.map((img, idx) => (
                         <img
                           key={idx}
-                          src={img?.url}
+                          src={resolveImageUrl(img)}
                           alt={`Slot ${idx + 1}`}
                           className={`amz-modal-thumb ${
                             selectedModalImgIndex === idx ? 'active' : ''

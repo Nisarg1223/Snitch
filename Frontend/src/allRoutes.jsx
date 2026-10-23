@@ -5,6 +5,7 @@ import CreateProduct from './features/products/pages/CreateProduct.jsx'
 import Dashboard from './features/products/pages/Dashboard.jsx'
 import Protected from './features/components/Protected.jsx'
 import ProductDetail from './features/products/pages/ProductDetail.jsx'
+import SellerProductDetails from './features/products/pages/SellerProductDetails.jsx'
 
 const AllRoutes = () => {
   return (
@@ -52,6 +53,14 @@ const AllRoutes = () => {
         }
       />
       <Route path="/product/:productId" element={<ProductDetail />} />
+      <Route
+        path="/seller/product/:productId"
+        element={
+          <Protected role="seller">
+           <SellerProductDetails/>
+          </Protected>
+        }
+      />
     </Routes>
   )
 }
