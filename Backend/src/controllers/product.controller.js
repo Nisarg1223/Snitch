@@ -107,3 +107,31 @@ export async function getProductDetails(req,res){
 
 
 }
+
+export async function addProductVariant(req,res){
+
+   const productId = req.params.productId;
+   const product = await productModel.findOne({
+      _id:productId,
+      seller: req.user._id
+   })
+   if(!product){
+
+   }
+   const files = req.files;
+    const images = [];
+   if(!files || files.length !== 0){
+       (await Promise.all(files.map(async (file)=>{
+         const image = await uploadFile({
+            buffer:file.buffer,
+            fileName: file.originalname
+         })
+         return image
+       }))).map(image => images.push(image));
+
+   }
+   const price = req.body.priceAmount;
+   const stock = req.body.stock;
+   const attributes = JSON.parse(req.body.attributes || "{}");
+
+}
