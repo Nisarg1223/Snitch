@@ -59,7 +59,7 @@ const extractVariantAttributes = (attrs) => {
 const SellerProductDetails = () => {
   const { productId } = useParams();
   const navigate = useNavigate();
-  const { handleGetProductById } = useProduct();
+  const { handleGetProductById, handleAddProductVariant } = useProduct();
   const user = useSelector((state) => state.auth?.user);
 
   const [product, setProduct] = useState(null);
@@ -70,6 +70,7 @@ const SellerProductDetails = () => {
 
   // Variant Modal & Notifications
   const [isAddVariantModalOpen, setIsAddVariantModalOpen] = useState(false);
+  const [isSubmittingVariant, setIsSubmittingVariant] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
 
   // Modal Form State
@@ -177,7 +178,13 @@ const SellerProductDetails = () => {
     if (files.length === 0) return;
 
     const remaining = 7 - variantImages.length;
+    if (remaining <= 0) {
+      setModalError('Maximum 7 images allowed per variant.');
+      return;
+    }
+
     const toAdd = files.slice(0, remaining).map((file) => ({
+      file,
       url: URL.createObjectURL(file),
     }));
 
@@ -203,7 +210,7 @@ const SellerProductDetails = () => {
   };
 
   // Save new variant
-  const handleSaveVariant = (e) => {
+  const handleSaveVariant = async (e) => {
     e.preventDefault();
     setModalError('');
 
@@ -229,30 +236,60 @@ const SellerProductDetails = () => {
       return;
     }
 
-    // Images fallback to parent if none provided
-    let finalImages = [...variantImages];
-    if (finalImages.length === 0 && product?.images && product.images.length > 0) {
-      finalImages = product.images.map((img) => ({ url: resolveImageUrl(img) })).filter((i) => i.url);
+    try {
+      setIsSubmittingVariant(true);
+
+      const formData = new FormData();
+      formData.append('priceAmount', variantPrice);
+      formData.append('priceCurrency', variantCurrency);
+      formData.append('stock', variantStock || 0);
+      formData.append('attributes', JSON.stringify(attributesMap));
+
+      // Separate file uploads from existing URLs
+      const existingUrls = [];
+      variantImages.forEach((img) => {
+        if (img.file) {
+          formData.append('images', img.file);
+        } else if (img.url && !img.url.startsWith('blob:')) {
+          existingUrls.push(img.url);
+        }
+      });
+
+      // Images fallback to parent if none provided
+      if (existingUrls.length === 0 && (!variantImages || variantImages.length === 0) && product?.images && product.images.length > 0) {
+        product.images.forEach((img) => {
+          const u = resolveImageUrl(img);
+          if (u) existingUrls.push(u);
+        });
+      }
+
+      if (existingUrls.length > 0) {
+        formData.append('existingImages', JSON.stringify(existingUrls));
+      }
+
+      const res = await handleAddProductVariant(productId, formData);
+
+      if (res?.product) {
+        setProduct(res.product);
+      } else if (res?.variant) {
+        setProduct((prev) => ({
+          ...prev,
+          varients: [...(prev?.varients || prev?.variants || []), res.variant],
+        }));
+      }
+
+      setIsAddVariantModalOpen(false);
+      showToast('✓ Variant added successfully to listing!');
+    } catch (err) {
+      console.error('Failed to add variant:', err);
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        'Failed to add variant to listing.';
+      setModalError(msg);
+    } finally {
+      setIsSubmittingVariant(false);
     }
-
-    const newVariant = {
-      _id: `v_${Date.now()}`,
-      price: {
-        amount: Number(variantPrice),
-        currency: variantCurrency,
-      },
-      stock: Math.max(0, Number(variantStock) || 0),
-      attributes: attributesMap,
-      images: finalImages,
-    };
-
-    setProduct((prev) => ({
-      ...prev,
-      varients: [...(prev?.varients || prev?.variants || []), newVariant],
-    }));
-
-    setIsAddVariantModalOpen(false);
-    showToast('✓ Variant added successfully to listing!');
   };
 
   // Delete variant from local listing
@@ -1049,15 +1086,17 @@ const SellerProductDetails = () => {
                   type="button"
                   className="amz-spd-btn-cancel"
                   onClick={() => setIsAddVariantModalOpen(false)}
+                  disabled={isSubmittingVariant}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   className="amz-spd-btn-accent"
-                  style={{ padding: '0.55rem 1.5rem' }}
+                  style={{ padding: '0.55rem 1.5rem', opacity: isSubmittingVariant ? 0.7 : 1 }}
+                  disabled={isSubmittingVariant}
                 >
-                  + Add Variant to Listing
+                  {isSubmittingVariant ? 'Adding Variant...' : '+ Add Variant to Listing'}
                 </button>
               </div>
             </form>

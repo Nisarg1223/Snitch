@@ -4,6 +4,37 @@ import { useSelector } from 'react-redux';
 import { useProduct } from '../hooks/useProduct';
 import './ProductDetail.css';
 
+const CURRENCY_SYMBOLS = {
+  INR: '₹',
+  USD: '$',
+  EUR: '€',
+  GBP: '£',
+  JPY: '¥',
+};
+
+const extractVariantAttributes = (attrs) => {
+  if (!attrs) return [];
+  if (attrs instanceof Map) return Array.from(attrs.entries());
+  if (typeof attrs === 'object') return Object.entries(attrs);
+  return [];
+};
+
+const resolveImageUrl = (img) => {
+  if (!img) return null;
+  if (typeof img === 'string') return img;
+  if (typeof img === 'object' && img.url) return img.url;
+  return null;
+};
+
+const getVariantLabel = (variant, idx = 0) => {
+  if (!variant) return 'Default Listing';
+  const entries = extractVariantAttributes(variant.attributes);
+  if (entries.length > 0) {
+    return entries.map(([k, v]) => `${k}: ${v}`).join(' • ');
+  }
+  return `Option #${idx + 1}`;
+};
+
 const ProductDetail = () => {
   const { productId } = useParams();
   const navigate = useNavigate();
@@ -14,6 +45,9 @@ const ProductDetail = () => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeImgIdx, setActiveImgIdx] = useState(0);
+
+  // Selected variant state (null = base product listing)
+  const [selectedVariantId, setSelectedVariantId] = useState(null);
 
   // User interactions
   const [quantity, setQuantity] = useState(1);
@@ -34,6 +68,7 @@ const ProductDetail = () => {
         if (isMounted) {
           setProduct(detail);
           setActiveImgIdx(0);
+          setSelectedVariantId(null);
         }
       } catch (err) {
         console.error('Error fetching product detail:', err);
@@ -48,21 +83,17 @@ const ProductDetail = () => {
     return () => {
       isMounted = false;
     };
-  }, [productId]);
+  }, [productId, handleGetProductById]);
 
   const showToast = (msg) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
+    setTimeout(() => setToastMessage(null), 3500);
   };
 
-  const handleAddToCart = () => {
-    setCartCount((prev) => prev + Number(quantity));
-    setCartSuccessBanner(true);
-    showToast(`Added ${quantity} item(s) to Cart`);
-  };
-
-  const handleBuyNow = () => {
-    setIsBuyModalOpen(true);
+  const handleSelectVariant = (variantId) => {
+    setSelectedVariantId(variantId);
+    setActiveImgIdx(0);
+    setQuantity(1);
   };
 
   const handleSearchSubmit = (e) => {
@@ -123,15 +154,55 @@ const ProductDetail = () => {
     );
   }
 
-  // Real product data extraction
-  const images = Array.isArray(product.images) && product.images.length > 0
+  // Extract variants (support both schema 'varients' and 'variants')
+  const variantsList = Array.isArray(product.varients)
+    ? product.varients
+    : Array.isArray(product.variants)
+      ? product.variants
+      : [];
+
+  const selectedVariant = variantsList.find(
+    (v) => String(v._id) === String(selectedVariantId)
+  ) || null;
+
+  // Active image gallery: variant images take precedence when selected and present
+  const baseImages = Array.isArray(product.images) && product.images.length > 0
     ? product.images
     : [{ url: '/amazon_hero_banner.jpg', _id: 'fallback_img' }];
 
-  const currentImg = images[activeImgIdx]?.url || images[0]?.url;
-  const unitPrice = Number(product.price?.amount || 0);
-  const formattedPrice = unitPrice.toLocaleString('en-IN');
-  const currency = product.price?.currency || 'INR';
+  const variantImages = (selectedVariant?.images && selectedVariant.images.length > 0)
+    ? selectedVariant.images
+    : null;
+
+  const activeImages = variantImages || baseImages;
+  const currentImg = resolveImageUrl(activeImages[activeImgIdx]) || resolveImageUrl(activeImages[0]) || '/amazon_hero_banner.jpg';
+
+  // Active pricing and currency
+  const unitPrice = Number(
+    selectedVariant?.price?.amount ?? product.price?.amount ?? 0
+  );
+  const currency = selectedVariant?.price?.currency || product.price?.currency || 'INR';
+  const currencySymbol = CURRENCY_SYMBOLS[currency] || (currency ? `${currency} ` : '₹');
+  const formattedWholePrice = Math.floor(unitPrice).toLocaleString('en-IN');
+  const fractionPrice = (unitPrice % 1 === 0) ? '00' : (unitPrice % 1).toFixed(2).split('.')[1];
+
+  // Stock status
+  const isVariantActive = Boolean(selectedVariant);
+  const stockCount = isVariantActive ? Number(selectedVariant.stock ?? 0) : null;
+  const isOutOfStock = isVariantActive && stockCount <= 0;
+
+  const handleAddToCart = () => {
+    if (isOutOfStock) return;
+    setCartCount((prev) => prev + Number(quantity));
+    setCartSuccessBanner(true);
+    const varInfo = selectedVariant ? ` (${getVariantLabel(selectedVariant)})` : '';
+    showToast(`Added ${quantity} item(s) to Cart${varInfo}`);
+  };
+
+  const handleBuyNow = () => {
+    if (isOutOfStock) return;
+    setIsBuyModalOpen(true);
+  };
 
   // Format dates
   const createdDate = product.createdAt
@@ -250,7 +321,7 @@ const ProductDetail = () => {
           <Link to="/" className="amz-pdp-sub-link">All Products</Link>
           <Link to="/" className="amz-pdp-sub-link">Customer Service</Link>
           {user?.role?.toLowerCase() === 'seller' && (
-            <Link to="/dashboard" className="amz-pdp-sub-link" style={{ color: '#febd69' }}>
+            <Link to="/seller/dashboard" className="amz-pdp-sub-link" style={{ color: '#febd69' }}>
               Seller Dashboard
             </Link>
           )}
@@ -282,8 +353,13 @@ const ProductDetail = () => {
               <div style={{ fontSize: '13px', color: '#333' }}>
                 Cart subtotal ({cartCount} item{cartCount > 1 ? 's' : ''}):{' '}
                 <strong style={{ color: '#0f1111' }}>
-                  ₹{(unitPrice * cartCount).toLocaleString('en-IN')}
+                  {currencySymbol}{(unitPrice * cartCount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </strong>
+                {selectedVariant && (
+                  <span style={{ marginLeft: '8px', color: '#007185', fontSize: '12px' }}>
+                    • Variation: {getVariantLabel(selectedVariant)}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -307,24 +383,27 @@ const ProductDetail = () => {
       )}
 
       {/* ============================================================
-          2. MAIN 3-COLUMN PRODUCT DETAIL CONTENT (TRUE DATA ONLY)
+          2. MAIN 3-COLUMN PRODUCT DETAIL CONTENT
           ============================================================ */}
       <main className="amz-pdp-main-content">
         {/* COLUMN 1: IMAGE GALLERY */}
         <section className="amz-pdp-col-gallery">
-          {images.length > 1 && (
+          {activeImages.length > 1 && (
             <div className="amz-pdp-thumbnails-list">
-              {images.map((imgObj, idx) => (
-                <div
-                  key={imgObj._id || idx}
-                  className={`amz-pdp-thumb-item ${activeImgIdx === idx ? 'active' : ''}`}
-                  onMouseEnter={() => setActiveImgIdx(idx)}
-                  onClick={() => setActiveImgIdx(idx)}
-                  title={`View image ${idx + 1}`}
-                >
-                  <img src={imgObj.url} alt={`Thumbnail ${idx + 1}`} />
-                </div>
-              ))}
+              {activeImages.map((imgObj, idx) => {
+                const thumbUrl = resolveImageUrl(imgObj);
+                return (
+                  <div
+                    key={imgObj._id || idx}
+                    className={`amz-pdp-thumb-item ${activeImgIdx === idx ? 'active' : ''}`}
+                    onMouseEnter={() => setActiveImgIdx(idx)}
+                    onClick={() => setActiveImgIdx(idx)}
+                    title={`View photo ${idx + 1}`}
+                  >
+                    <img src={thumbUrl} alt={`Thumbnail ${idx + 1}`} />
+                  </div>
+                );
+              })}
             </div>
           )}
 
@@ -346,12 +425,16 @@ const ProductDetail = () => {
                 <circle cx="11" cy="11" r="8" />
                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
-              <span>Roll over image to zoom in</span>
+              <span>
+                {selectedVariant
+                  ? `Viewing variation image • Roll over image to zoom in`
+                  : 'Roll over image to zoom in'}
+              </span>
             </div>
           </div>
         </section>
 
-        {/* COLUMN 2: TRUE PRODUCT DETAILS */}
+        {/* COLUMN 2: TRUE PRODUCT DETAILS + VARIATION OPTIONS */}
         <section className="amz-pdp-col-details">
           {/* Title */}
           <h1 className="amz-pdp-title">{product.title}</h1>
@@ -362,9 +445,9 @@ const ProductDetail = () => {
           <div className="amz-pdp-price-box">
             <div className="amz-pdp-price-row">
               <div className="amz-pdp-current-price">
-                <span className="amz-pdp-currency-symbol">₹</span>
-                <span>{formattedPrice}</span>
-                <span className="amz-pdp-fraction">00</span>
+                <span className="amz-pdp-currency-symbol">{currencySymbol}</span>
+                <span>{formattedWholePrice}</span>
+                <span className="amz-pdp-fraction">{fractionPrice}</span>
               </div>
               <span className="amz-pdp-currency-tag">({currency})</span>
             </div>
@@ -372,6 +455,138 @@ const ProductDetail = () => {
           </div>
 
           <hr className="amz-pdp-divider" />
+
+          {/* ============================================================
+              VARIATIONS / OPTIONS SELECTOR (VISIBLE TO BUYER)
+              ============================================================ */}
+          {variantsList.length > 0 && (
+            <div className="amz-pdp-variations-container">
+              <div className="amz-pdp-variation-header">
+                <span className="amz-pdp-variation-label">Variation / Option:</span>{' '}
+                <span className="amz-pdp-variation-selected-title">
+                  {selectedVariant ? getVariantLabel(selectedVariant) : 'Default Listing'}
+                </span>
+              </div>
+
+              {/* Variation Swatch Tiles */}
+              <div className="amz-pdp-variation-swatches-grid">
+                {/* 1. Base Product Listing Option */}
+                <button
+                  type="button"
+                  className={`amz-pdp-swatch-card ${!selectedVariantId ? 'active' : ''}`}
+                  onClick={() => handleSelectVariant(null)}
+                  title="Default / Base Listing"
+                >
+                  <div className="amz-pdp-swatch-thumb-wrap">
+                    <img
+                      src={resolveImageUrl(product.images?.[0]) || '/amazon_hero_banner.jpg'}
+                      alt="Default Listing"
+                      className="amz-pdp-swatch-thumb"
+                    />
+                  </div>
+                  <div className="amz-pdp-swatch-info">
+                    <div className="amz-pdp-swatch-name">Default Listing</div>
+                    <div className="amz-pdp-swatch-price">
+                      {CURRENCY_SYMBOLS[product.price?.currency || 'INR'] || '₹'}
+                      {Number(product.price?.amount || 0).toLocaleString('en-IN')}
+                    </div>
+                    <div className="amz-pdp-swatch-stock-indicator in">In Stock</div>
+                  </div>
+                  {!selectedVariantId && (
+                    <div className="amz-pdp-swatch-active-badge">✓</div>
+                  )}
+                </button>
+
+                {/* 2. Each Added Variant */}
+                {variantsList.map((variant, idx) => {
+                  const isSelected = String(variant._id) === String(selectedVariantId);
+                  const vAttrs = extractVariantAttributes(variant.attributes);
+                  const vPrice = Number(variant.price?.amount ?? product.price?.amount ?? 0);
+                  const vCurr = variant.price?.currency || product.price?.currency || 'INR';
+                  const vStock = Number(variant.stock ?? 0);
+                  const isVOutOfStock = vStock <= 0;
+                  const vThumb =
+                    resolveImageUrl(variant.images?.[0]) ||
+                    resolveImageUrl(product.images?.[0]) ||
+                    '/amazon_hero_banner.jpg';
+
+                  return (
+                    <button
+                      key={variant._id || idx}
+                      type="button"
+                      className={`amz-pdp-swatch-card ${isSelected ? 'active' : ''} ${isVOutOfStock ? 'out-of-stock' : ''}`}
+                      onClick={() => handleSelectVariant(variant._id)}
+                      title={`Select ${getVariantLabel(variant, idx)}`}
+                    >
+                      <div className="amz-pdp-swatch-thumb-wrap">
+                        <img
+                          src={vThumb}
+                          alt={getVariantLabel(variant, idx)}
+                          className="amz-pdp-swatch-thumb"
+                        />
+                        {isVOutOfStock && (
+                          <span className="amz-pdp-swatch-oos-overlay">Out of Stock</span>
+                        )}
+                      </div>
+
+                      <div className="amz-pdp-swatch-info">
+                        <div className="amz-pdp-swatch-name" title={getVariantLabel(variant, idx)}>
+                          {vAttrs.length > 0 ? (
+                            vAttrs.map(([k, v], i) => (
+                              <span key={i} className="amz-pdp-swatch-attr-tag">
+                                <strong>{k}:</strong> {v}
+                              </span>
+                            ))
+                          ) : (
+                            <span>Option #{idx + 1}</span>
+                          )}
+                        </div>
+
+                        <div className="amz-pdp-swatch-price">
+                          {CURRENCY_SYMBOLS[vCurr] || '₹'}
+                          {vPrice.toLocaleString('en-IN')}
+                        </div>
+
+                        <div className={`amz-pdp-swatch-stock-indicator ${vStock > 0 ? 'in' : 'out'}`}>
+                          {vStock > 0 ? `In Stock (${vStock})` : 'Out of Stock'}
+                        </div>
+                      </div>
+
+                      {isSelected && (
+                        <div className="amz-pdp-swatch-active-badge">✓</div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Selected Variation Specifications Chip Bar */}
+              {selectedVariant && (
+                <div className="amz-pdp-selected-variant-summary">
+                  <span className="amz-pdp-summary-lead">Selected Variation Specifications:</span>
+                  <div className="amz-pdp-selected-attrs-list">
+                    {extractVariantAttributes(selectedVariant.attributes).map(([key, val], aIdx) => (
+                      <div key={aIdx} className="amz-pdp-selected-attr-chip">
+                        <span className="amz-pdp-chip-key">{key}:</span>
+                        <span className="amz-pdp-chip-val">{val}</span>
+                      </div>
+                    ))}
+                    <div className="amz-pdp-selected-attr-chip">
+                      <span className="amz-pdp-chip-key">Inventory:</span>
+                      <span
+                        className="amz-pdp-chip-val"
+                        style={{ color: stockCount > 0 ? '#007600' : '#b12704', fontWeight: 700 }}
+                      >
+                        {stockCount > 0 ? `${stockCount} units available` : 'Out of stock'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <hr className="amz-pdp-divider" />
+            </div>
+          )}
 
           {/* Real Product Specifications */}
           <div>
@@ -390,6 +605,14 @@ const ProductDetail = () => {
                     {product._id}
                   </td>
                 </tr>
+                {selectedVariant && (
+                  <tr>
+                    <td className="amz-pdp-spec-label">Selected Variation</td>
+                    <td className="amz-pdp-spec-value">
+                      <strong style={{ color: '#007185' }}>{getVariantLabel(selectedVariant)}</strong>
+                    </td>
+                  </tr>
+                )}
                 {product.seller && (
                   <tr>
                     <td className="amz-pdp-spec-label">Seller ID</td>
@@ -440,55 +663,102 @@ const ProductDetail = () => {
         {/* COLUMN 3: BUY BOX */}
         <aside className="amz-pdp-col-buybox">
           <div className="amz-pdp-buybox-price">
-            <span style={{ fontSize: '16px', position: 'relative', top: '-7px', marginRight: '2px' }}>₹</span>
-            <span>{formattedPrice}</span>
-            <span style={{ fontSize: '14px', position: 'relative', top: '-7px', marginLeft: '2px' }}>00</span>
+            <span style={{ fontSize: '16px', position: 'relative', top: '-7px', marginRight: '2px' }}>
+              {currencySymbol}
+            </span>
+            <span>{formattedWholePrice}</span>
+            <span style={{ fontSize: '14px', position: 'relative', top: '-7px', marginLeft: '2px' }}>
+              {fractionPrice}
+            </span>
           </div>
+
+          {/* Selected Option Summary Badge in Buy Box */}
+          {variantsList.length > 0 && (
+            <div className="amz-pdp-buybox-option-pill">
+              <span className="amz-pdp-buybox-opt-label">Option:</span>
+              <span className="amz-pdp-buybox-opt-val">
+                {selectedVariant ? getVariantLabel(selectedVariant) : 'Default Listing'}
+              </span>
+            </div>
+          )}
+
+          {/* Stock Status */}
+          {isOutOfStock ? (
+            <div className="amz-pdp-stock-status out-of-stock">
+              <div style={{ fontSize: '17px', fontWeight: 700, color: '#b12704', marginBottom: '2px' }}>
+                Currently unavailable.
+              </div>
+              <div style={{ fontSize: '12px', color: '#565959' }}>
+                We don't know when or if this variation will be back in stock.
+              </div>
+            </div>
+          ) : (
+            <div className="amz-pdp-stock-status in-stock">
+              <div style={{ fontSize: '17px', fontWeight: 700, color: '#007600', marginBottom: '2px' }}>
+                In Stock
+              </div>
+              {selectedVariant && stockCount && (
+                <div style={{ fontSize: '12px', color: '#565959' }}>
+                  {stockCount <= 5 ? `Only ${stockCount} left in stock - order soon.` : `Fulfillment available (${stockCount} units).`}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Quantity Selector */}
-          <div className="amz-pdp-qty-row">
-            <label htmlFor="qty-select">Quantity:</label>
-            <select
-              id="qty-select"
-              className="amz-pdp-qty-select"
-              value={quantity}
-              onChange={(e) => setQuantity(Number(e.target.value))}
-            >
-              {[1, 2, 3, 4, 5].map((num) => (
-                <option key={num} value={num}>
-                  {num}
-                </option>
-              ))}
-            </select>
-          </div>
+          {!isOutOfStock && (
+            <div className="amz-pdp-qty-row">
+              <label htmlFor="qty-select">Quantity:</label>
+              <select
+                id="qty-select"
+                className="amz-pdp-qty-select"
+                value={quantity}
+                onChange={(e) => setQuantity(Number(e.target.value))}
+              >
+                {[1, 2, 3, 4, 5]
+                  .filter((num) => !selectedVariant || stockCount == null || num <= stockCount)
+                  .map((num) => (
+                    <option key={num} value={num}>
+                      {num}
+                    </option>
+                  ))}
+              </select>
+            </div>
+          )}
 
-          <div style={{ fontSize: '13px', color: '#565959' }}>
-            Subtotal: <strong>₹{(unitPrice * quantity).toLocaleString('en-IN')}</strong>
-          </div>
+          {!isOutOfStock && (
+            <div style={{ fontSize: '13px', color: '#565959' }}>
+              Subtotal: <strong>{currencySymbol}{(unitPrice * quantity).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+            </div>
+          )}
 
           {/* ADD TO CART & BUY NOW BUTTONS */}
           <button
             type="button"
             className="amz-pdp-btn-add-cart"
             onClick={handleAddToCart}
+            disabled={isOutOfStock}
+            style={{ opacity: isOutOfStock ? 0.5 : 1, cursor: isOutOfStock ? 'not-allowed' : 'pointer' }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111" strokeWidth="2">
               <circle cx="9" cy="21" r="1" />
               <circle cx="20" cy="21" r="1" />
               <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
             </svg>
-            Add to Cart
+            {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
           </button>
 
           <button
             type="button"
             className="amz-pdp-btn-buy-now"
             onClick={handleBuyNow}
+            disabled={isOutOfStock}
+            style={{ opacity: isOutOfStock ? 0.5 : 1, cursor: isOutOfStock ? 'not-allowed' : 'pointer' }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111" strokeWidth="2">
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
             </svg>
-            Buy Now
+            {isOutOfStock ? 'Unavailable' : 'Buy Now'}
           </button>
 
           {/* True Seller Info */}
@@ -531,11 +801,16 @@ const ProductDetail = () => {
                 />
                 <div className="amz-pdp-checkout-info">
                   <h4>{product.title}</h4>
+                  {selectedVariant && (
+                    <div style={{ fontSize: '12px', color: '#007185', fontWeight: 600, margin: '2px 0 4px 0' }}>
+                      Variation: {getVariantLabel(selectedVariant)}
+                    </div>
+                  )}
                   <div style={{ fontSize: '13px', color: '#565959', marginBottom: '4px' }}>
                     Quantity: {quantity}
                   </div>
                   <div className="amz-pdp-checkout-price">
-                    ₹{(unitPrice * quantity).toLocaleString('en-IN')}
+                    {currencySymbol}{(unitPrice * quantity).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
                 </div>
               </div>
@@ -543,7 +818,7 @@ const ProductDetail = () => {
               <div className="amz-pdp-checkout-summary">
                 <div className="amz-pdp-summary-row">
                   <span>Unit Price:</span>
-                  <span>₹{formattedPrice}</span>
+                  <span>{currencySymbol}{formattedWholePrice}.{fractionPrice}</span>
                 </div>
                 <div className="amz-pdp-summary-row">
                   <span>Quantity:</span>
@@ -551,7 +826,7 @@ const ProductDetail = () => {
                 </div>
                 <div className="amz-pdp-summary-row total">
                   <span>Total Amount:</span>
-                  <span>₹{(unitPrice * quantity).toLocaleString('en-IN')}</span>
+                  <span>{currencySymbol}{(unitPrice * quantity).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
               </div>
             </div>
@@ -569,7 +844,8 @@ const ProductDetail = () => {
                 className="amz-pdp-btn-confirm-order"
                 onClick={() => {
                   setIsBuyModalOpen(false);
-                  showToast('🎉 Order placed successfully!');
+                  const varInfo = selectedVariant ? ` (${getVariantLabel(selectedVariant)})` : '';
+                  showToast(`🎉 Order placed successfully for ${product.title}${varInfo}!`);
                 }}
               >
                 Place Your Order

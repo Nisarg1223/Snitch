@@ -1,6 +1,6 @@
 import {Router} from 'express';
 import { authenticateSeller } from '../middlewares/auth.middleware.js';
-import { createProduct, getProductDetails, getSellerProducts } from '../controllers/product.controller.js';
+import { addProductVariant, createProduct, getProductDetails, getSellerProducts } from '../controllers/product.controller.js';
 import multer from 'multer';
 import { createProductValidator } from '../validator/product.validator.js';
 import { getAllProducts } from '../controllers/product.controller.js';
@@ -18,5 +18,7 @@ productRouter.get("/seller",authenticateSeller,getSellerProducts)
 
 productRouter.get("/",getAllProducts);
 
-productRouter.get('/detail/:id',getProductDetails)
+productRouter.get('/detail/:id',getProductDetails);
+
+productRouter.post('/:productId/variants',authenticateSeller,upload.array('images', 7),addProductVariant)
 export default productRouter;

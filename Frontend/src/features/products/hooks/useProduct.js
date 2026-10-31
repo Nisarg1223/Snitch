@@ -1,7 +1,19 @@
 import { useCallback } from "react";
-import { createProduct, getSellerProduct, getAllProducts, getProductById } from "../services/product.api.js";
+import {
+    createProduct,
+    getSellerProduct,
+    getAllProducts,
+    getProductById,
+    addProductVariant
+} from "../services/product.api.js";
 import { useDispatch } from "react-redux";
-import { setSellerProducts, setProducts } from "../state/product.slice.js";
+import {
+    setSellerProducts,
+    setProducts,
+    setCurrentProduct,
+    updateSellerProduct,
+    addVariantToProduct
+} from "../state/product.slice.js";
 
 export const useProduct = () => {
     const dispatch = useDispatch();
@@ -25,13 +37,27 @@ export const useProduct = () => {
 
     const handleGetProductById = useCallback(async (productId) => {
         const data = await getProductById(productId);
+        if (data?.product) {
+            dispatch(setCurrentProduct(data.product));
+        }
         return data.product;
-    }, []);
+    }, [dispatch]);
+
+    const handleAddProductVariant = useCallback(async (productId, variantData) => {
+        const data = await addProductVariant(productId, variantData);
+        if (data?.product) {
+            dispatch(updateSellerProduct(data.product));
+            dispatch(addVariantToProduct({ productId, variant: data.variant, product: data.product }));
+        }
+        return data;
+    }, [dispatch]);
 
     return {
         handleCreateProduct,
         handleGetSellerProduct,
         handleGetProducts,
-        handleGetProductById
+        handleGetProductById,
+        handleAddProductVariant,
+        handleAddVariant: handleAddProductVariant
     };
-};
+};

@@ -1086,3 +1086,262 @@
     font-size: 13px;
   }
 }
+
+
+/* ==========================================================================
+   PRODUCT VARIATIONS & OPTIONS STYLES (BUYER VIEW)
+   ========================================================================== */
+.amz-pdp-variations-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 6px 0 10px 0;
+}
+
+.amz-pdp-variation-header {
+  font-size: 14px;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.amz-pdp-variation-label {
+  color: var(--amz-text-muted);
+  font-weight: 600;
+}
+
+.amz-pdp-variation-selected-title {
+  color: #0f1111;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.amz-pdp-variation-swatches-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.amz-pdp-swatch-card {
+  position: relative;
+  border: 1px solid #d5d9d9;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.18s ease-in-out;
+  min-width: 170px;
+  max-width: 280px;
+  flex: 1 1 180px;
+  text-align: left;
+  outline: none;
+  font-family: inherit;
+}
+
+.amz-pdp-swatch-card:hover {
+  border-color: #007185;
+  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.amz-pdp-swatch-card.active {
+  border: 2px solid #e77600;
+  background-color: #fdf5ea;
+  box-shadow: 0 0 6px rgba(231, 118, 0, 0.25);
+}
+
+.amz-pdp-swatch-card.out-of-stock {
+  opacity: 0.72;
+  border-style: dashed;
+  background-color: #fafafa;
+}
+
+.amz-pdp-swatch-thumb-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #f7f7f7;
+  flex-shrink: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #eee;
+}
+
+.amz-pdp-swatch-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.amz-pdp-swatch-oos-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  color: #ffffff;
+  font-size: 8px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  text-transform: uppercase;
+  padding: 2px;
+  line-height: 1.1;
+}
+
+.amz-pdp-swatch-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.amz-pdp-swatch-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f1111;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  line-height: 1.25;
+}
+
+.amz-pdp-swatch-attr-tag {
+  display: inline-block;
+  background: #f0f2f2;
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 11px;
+  color: #333333;
+}
+
+.amz-pdp-swatch-price {
+  font-size: 13px;
+  font-weight: 700;
+  color: #b12704;
+}
+
+.amz-pdp-swatch-stock-indicator {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.amz-pdp-swatch-stock-indicator.in {
+  color: #007600;
+}
+
+.amz-pdp-swatch-stock-indicator.out {
+  color: #b12704;
+}
+
+.amz-pdp-swatch-active-badge {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #e77600;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Selected Variation Spec Chips */
+.amz-pdp-selected-variant-summary {
+  background: #f7fafa;
+  border: 1px solid #d5e4e6;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.amz-pdp-summary-lead {
+  font-size: 11px;
+  font-weight: 700;
+  color: #007185;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.amz-pdp-selected-attrs-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.amz-pdp-selected-attr-chip {
+  background: #ffffff;
+  border: 1px solid #d5d9d9;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.amz-pdp-chip-key {
+  color: #565959;
+  font-weight: 600;
+}
+
+.amz-pdp-chip-val {
+  color: #0f1111;
+  font-weight: 700;
+}
+
+/* Buy Box Option Summary */
+.amz-pdp-buybox-option-pill {
+  background: #f0f2f2;
+  border: 1px solid #d5d9d9;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  word-break: break-word;
+}
+
+.amz-pdp-buybox-opt-label {
+  font-size: 11px;
+  color: #565959;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.amz-pdp-buybox-opt-val {
+  color: #007185;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+/* Stock Status in Buy Box */
+.amz-pdp-stock-status {
+  padding: 4px 0;
+}
+
+.amz-pdp-stock-status.in-stock {
+  color: #007600;
+}
+
+.amz-pdp-stock-status.out-of-stock {
+  color: #b12704;
+}
