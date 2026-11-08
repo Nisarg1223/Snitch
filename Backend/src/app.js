@@ -8,7 +8,7 @@ import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import User from './models/user.model.js';
 import authrouter from './routes/auth.route.js';
 import productRouter from './routes/products.route.js';
-
+import cartRouter from './routes/cart.route.js';
 dotenv.config();
 
 const app = express();
@@ -106,4 +106,7 @@ app.get('/api/auth/google/callback',
 
 app.use('/api/auth', authrouter);
 app.use('/api/products',productRouter);
+app.use('/api/cart',cartRouter);
+
+
 export default app;
