@@ -1,13 +1,20 @@
 import productModel from '../models/product.model.js';
-import ProductModel from '../models/product.model.js';
 
-export const stockOfVariant = async(productId,variantId)=>{
-    const product = await productModel.findOne({
-        _id:productId,
-        "variants._id":variantId
-    });
+export const stockOfVariant = async (productId, variantId) => {
+    try {
+        const product = await productModel.findById(productId);
+        if (!product) return 0;
 
-    const stock = product.variants.find(variant => variant._id.toString() === variantId).stock
+        if (!variantId || variantId === "null" || variantId === "undefined") {
+            return 999;
+        }
 
-    return stock;
-}
+        const variantsList = product.varients || product.variants || [];
+        const variant = variantsList.find((v) => v._id && v._id.toString() === variantId.toString());
+
+        return variant ? (Number(variant.stock) || 0) : 0;
+    } catch (err) {
+        console.error("Error in stockOfVariant:", err);
+        return 0;
+    }
+};

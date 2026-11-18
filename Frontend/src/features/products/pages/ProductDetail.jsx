@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useProduct } from '../hooks/useProduct';
+import { useCart } from '../../cart/hook/useCart.js';
 import './ProductDetail.css';
 
 const CURRENCY_SYMBOLS = {
@@ -40,6 +41,7 @@ const ProductDetail = () => {
   const navigate = useNavigate();
   const { handleGetProductById } = useProduct();
   const { user } = useSelector((state) => state.auth);
+  const { cartCount, handleAddItem, handleGetCart } = useCart();
 
   // Core product state
   const [product, setProduct] = useState(null);
@@ -51,12 +53,19 @@ const ProductDetail = () => {
 
   // User interactions
   const [quantity, setQuantity] = useState(1);
-  const [cartCount, setCartCount] = useState(0);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [cartSuccessBanner, setCartSuccessBanner] = useState(false);
   const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [toastMessage, setToastMessage] = useState(null);
+
+  // Fetch cart on mount if authenticated
+  useEffect(() => {
+    if (user) {
+      handleGetCart();
+    }
+  }, [user, handleGetCart]);
 
   // Fetch product detail on mount or productId change
   useEffect(() => {
@@ -191,12 +200,32 @@ const ProductDetail = () => {
   const stockCount = isVariantActive ? Number(selectedVariant.stock ?? 0) : null;
   const isOutOfStock = isVariantActive && stockCount <= 0;
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (isOutOfStock) return;
-    setCartCount((prev) => prev + Number(quantity));
-    setCartSuccessBanner(true);
-    const varInfo = selectedVariant ? ` (${getVariantLabel(selectedVariant)})` : '';
-    showToast(`Added ${quantity} item(s) to Cart${varInfo}`);
+    if (!user) {
+      showToast('Please sign in to add items to your cart');
+      navigate('/login');
+      return;
+    }
+
+    try {
+      setIsAddingToCart(true);
+      await handleAddItem({
+        productId,
+        variantId: selectedVariantId,
+        quantity: Number(quantity) || 1,
+      });
+
+      setCartSuccessBanner(true);
+      const varInfo = selectedVariant ? ` (${getVariantLabel(selectedVariant)})` : '';
+      showToast(`Added ${quantity} item(s) to Cart${varInfo}`);
+    } catch (err) {
+      console.error('Failed to add to cart:', err);
+      const msg = err?.response?.data?.message || err?.message || 'Failed to add item to cart.';
+      showToast(`⚠️ ${msg}`);
+    } finally {
+      setIsAddingToCart(false);
+    }
   };
 
   const handleBuyNow = () => {
@@ -207,18 +236,18 @@ const ProductDetail = () => {
   // Format dates
   const createdDate = product.createdAt
     ? new Date(product.createdAt).toLocaleDateString('en-IN', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-      })
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    })
     : null;
 
   const updatedDate = product.updatedAt
     ? new Date(product.updatedAt).toLocaleDateString('en-IN', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-      })
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    })
     : null;
 
   return (
@@ -737,15 +766,18 @@ const ProductDetail = () => {
             type="button"
             className="amz-pdp-btn-add-cart"
             onClick={handleAddToCart}
-            disabled={isOutOfStock}
-            style={{ opacity: isOutOfStock ? 0.5 : 1, cursor: isOutOfStock ? 'not-allowed' : 'pointer' }}
+            disabled={isOutOfStock || isAddingToCart}
+            style={{
+              opacity: (isOutOfStock || isAddingToCart) ? 0.6 : 1,
+              cursor: (isOutOfStock || isAddingToCart) ? 'not-allowed' : 'pointer'
+            }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111" strokeWidth="2">
               <circle cx="9" cy="21" r="1" />
               <circle cx="20" cy="21" r="1" />
               <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
             </svg>
-            {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+            {isOutOfStock ? 'Out of Stock' : isAddingToCart ? 'Adding to Cart...' : 'Add to Cart'}
           </button>
 
           <button
