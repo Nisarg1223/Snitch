@@ -201,7 +201,7 @@ const CreateProduct = () => {
           {/* Logo & Seller Central Brand */}
           <Link to="/" className="amz-header-brand">
             <div className="amz-logo-combo">
-              <span className="amz-logo-text">amazon</span>
+              <span className="amz-logo-text">snitch</span>
               <span className="amz-logo-smile">⌣</span>
             </div>
             <span className="amz-seller-tag">Seller Central</span>
@@ -210,7 +210,7 @@ const CreateProduct = () => {
           {/* Marketplace Indicator */}
           <div className="amz-market-picker">
             <span>🇮🇳</span>
-            <span className="amz-market-name-full">Amazon.in (India)</span>
+            <span className="amz-market-name-full">Snitch.in (India)</span>
             <span className="amz-market-name-short">IN</span>
             <span style={{ fontSize: '0.65rem' }}>▼</span>
           </div>

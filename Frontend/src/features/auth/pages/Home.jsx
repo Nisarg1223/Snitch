@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { setUser } from '../state/auth.slice.js';
@@ -21,10 +21,38 @@ const Home = () => {
   const [activeModalImgIdx, setActiveModalImgIdx] = useState(0);
   const [cartToastMessage, setCartToastMessage] = useState(null);
 
+  // Carousel horizontal scroll controls
+  const carouselRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScrollButtons = () => {
+    if (!carouselRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
+    setCanScrollLeft(scrollLeft > 15);
+    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 15);
+  };
+
+  const scrollCarousel = (direction) => {
+    if (!carouselRef.current) return;
+    const scrollAmount = 560;
+    carouselRef.current.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth',
+    });
+  };
+
   // Fetch real products from backend on mount
   useEffect(() => {
     handleGetProducts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Update carousel button state on mount and resize
+  useEffect(() => {
+    checkScrollButtons();
+    window.addEventListener('resize', checkScrollButtons);
+    return () => window.removeEventListener('resize', checkScrollButtons);
   }, []);
 
   // Handle Google OAuth redirect if present
@@ -60,7 +88,7 @@ const Home = () => {
         productId: product._id,
         quantity: 1,
       });
-      setCartToastMessage(`Added "${product.title}" to your Amazon Cart!`);
+      setCartToastMessage(`Added "${product.title}" to your Snitch Cart!`);
       setTimeout(() => {
         setCartToastMessage(null);
       }, 3000);
@@ -84,52 +112,6 @@ const Home = () => {
       return matchesSearch;
     });
   }, [products, searchQuery]);
-
-  // Distribute real products across the 4 Amazon feature cards shown in the screenshot
-  const cardData = useMemo(() => {
-    const defaultCards = [
-      {
-        id: 'kitchen',
-        title: 'Top categories in Kitchen appliances',
-        actionText: 'Explore all in Kitchen',
-        filterKeyword: 'kitchen',
-      },
-      {
-        id: 'home',
-        title: 'Shop for your home essentials',
-        actionText: 'Discover home deals',
-        filterKeyword: 'home',
-      },
-      {
-        id: 'gaming',
-        title: 'Gaming accessories',
-        actionText: 'See more in Gaming',
-        filterKeyword: 'gaming',
-      },
-      {
-        id: 'fashion',
-        title: 'Shop deals in Fashion',
-        actionText: 'See all deals',
-        filterKeyword: 'fashion',
-      },
-    ];
-
-    return defaultCards.map((card, idx) => {
-      // Find matching real product or assign available real products
-      let matched = products.find(
-        (p) =>
-          p.title?.toLowerCase().includes(card.filterKeyword) ||
-          p.description?.toLowerCase().includes(card.filterKeyword)
-      );
-      if (!matched && products.length > idx) {
-        matched = products[idx];
-      }
-      return {
-        ...card,
-        product: matched || null,
-      };
-    });
-  }, [products]);
 
   return (
     <div className="amazon-home-root">
@@ -159,152 +141,256 @@ const Home = () => {
       )}
 
       {/* ============================================================
-          3. HERO BANNER SECTION (Easter / Sunny Yellow)
+          3. AMAZON INDIA HERO DEALS CAROUSEL (Under ₹499, Sneakers, etc.)
           ============================================================ */}
-      <section className="amz-hero-section">
-        <div className="amz-hero-img-wrapper">
-          <img
-            src="/amazon_hero_banner.jpg"
-            alt="Fill your basket with joy - Amazon Easter & Spring Selection"
-            className="amz-hero-bg-img"
-          />
-          {/* Subtle gradient so banner smoothly transitions into cards */}
-          <div className="amz-hero-fade"></div>
-        </div>
+      <section className="amz-deals-carousel-wrapper">
+        {canScrollLeft && (
+          <button
+            type="button"
+            className="amz-carousel-arrow amz-carousel-arrow-left"
+            onClick={() => scrollCarousel('left')}
+            aria-label="Scroll left"
+          >
+            ‹
+          </button>
+        )}
 
-        {/* The White Notification Strip (as seen in image) */}
-        <div className="amz-notification-strip-wrapper">
-          <div className="amz-notification-strip">
-            You are on amazon.com. You can also shop on Amazon India for millions of
-            products with fast local delivery.{' '}
-            <a
-              href="https://www.amazon.in"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Click here to go to amazon.in
-            </a>
+        <div
+          className="amz-deals-carousel"
+          ref={carouselRef}
+          onScroll={checkScrollButtons}
+        >
+          {/* Card 1: Everything under ₹499 (Orange) */}
+          <div
+            className="amz-hero-deal-card card-orange"
+            onClick={() => navigate('/?search=under 499')}
+          >
+            <div className="amz-deal-header">
+              <span className="amz-deal-price-title">Everything</span>
+              <h3 className="amz-deal-price-big">under ₹499</h3>
+              <p className="amz-deal-subtitle">Fashion, home & more</p>
+              <div className="amz-deal-pills-row">
+                <span className="amz-deal-pill">
+                  <span className="amz-pill-icon">🚚</span> Free Delivery
+                </span>
+                <span className="amz-deal-pill">
+                  <span className="amz-pill-icon">⏱</span> Quick Refunds
+                </span>
+              </div>
+            </div>
+
+            <div className="amz-deal-mosaic-body">
+              <img
+                src="/amz_deal_everything.jpg"
+                alt="Everything under ₹499"
+                className="amz-deal-mosaic-img"
+              />
+            </div>
+
+            <div className="amz-deal-card-bottom-bar">
+              <button
+                type="button"
+                className="amz-deal-reload-btn"
+                title="Refresh deals"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleGetProducts();
+                }}
+              >
+                ↻
+              </button>
+            </div>
+          </div>
+
+          {/* Card 2: Under ₹499 Trendy sneakers (Red) */}
+          <div
+            className="amz-hero-deal-card card-red"
+            onClick={() => navigate('/?search=sneakers')}
+          >
+            <div className="amz-deal-header">
+              <h3 className="amz-deal-price-big">Under ₹499</h3>
+              <p className="amz-deal-subtitle">Trendy sneakers</p>
+              <div className="amz-deal-pills-row">
+                <span className="amz-deal-badge-pill">Top brands</span>
+                <span className="amz-deal-badge-pill">Latest trends</span>
+              </div>
+            </div>
+
+            <div className="amz-deal-img-container">
+              <img
+                src="/amz_deal_sneakers.jpg"
+                alt="Trendy sneakers under ₹499"
+                className="amz-deal-hero-img"
+              />
+            </div>
+
+            <div className="amz-icici-cashback-bar">
+              <div className="amz-icici-badge-pill">
+                <span className="amz-icici-badge-top">amazon pay</span>
+                <span className="amz-icici-badge-sub">ICICI Bank</span>
+              </div>
+              <span className="amz-icici-text">
+                Unlimited <strong>5% cashback*</strong> with Amazon Pay ICICI Bank credit card
+              </span>
+            </div>
+            <div className="amz-deal-tc">*T&C apply</div>
+          </div>
+
+          {/* Card 3: Under ₹999 Electric toothbrushes & more (Mint Green) */}
+          <div
+            className="amz-hero-deal-card card-mint"
+            onClick={() => navigate('/?search=toothbrush')}
+          >
+            <div className="amz-deal-header dark-theme">
+              <h3 className="amz-deal-price-big dark-text">Under ₹999</h3>
+              <p className="amz-deal-subtitle dark-sub">Electric toothbrushes & more</p>
+              <div className="amz-deal-pills-row">
+                <span className="amz-brand-logo-pill">Oral-B</span>
+              </div>
+            </div>
+
+            <div className="amz-deal-img-container">
+              <img
+                src="/amz_deal_toothbrush.jpg"
+                alt="Electric toothbrushes & more under ₹999"
+                className="amz-deal-hero-img"
+              />
+            </div>
+
+            <div className="amz-icici-cashback-bar">
+              <div className="amz-icici-badge-pill">
+                <span className="amz-icici-badge-top">amazon pay</span>
+                <span className="amz-icici-badge-sub">ICICI Bank</span>
+              </div>
+              <span className="amz-icici-text">
+                Unlimited <strong>3% cashback*</strong> with Amazon Pay ICICI Bank credit card
+              </span>
+            </div>
+            <div className="amz-deal-tc dark-tc">*T&C apply</div>
+          </div>
+
+          {/* Card 4: Win up to ₹300 back - FunZone (Winter Sky Blue) */}
+          <div
+            className="amz-hero-deal-card card-sky"
+            onClick={() => navigate('/?search=deals')}
+          >
+            <div className="amz-deal-header dark-theme">
+              <span className="amz-deal-price-title dark-sub">Win up to</span>
+              <h3 className="amz-deal-price-big dark-text">₹300 back</h3>
+              <div className="amz-deal-pills-row">
+                <span className="amz-funzone-badge">FUN<span className="amz-fun-accent">ZONE</span></span>
+              </div>
+            </div>
+
+            <div className="amz-deal-img-container">
+              <img
+                src="/amz_deal_funzone.jpg"
+                alt="Win up to ₹300 back FunZone"
+                className="amz-deal-hero-img"
+              />
+            </div>
+
+            <div className="amz-funzone-bottom-bar">
+              <span className="amz-funzone-tc">*Terms & conditions apply</span>
+              <button
+                type="button"
+                className="amz-deal-reload-btn dark-reload"
+                title="Spin again"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleGetProducts();
+                }}
+              >
+                ↻
+              </button>
+            </div>
+          </div>
+
+          {/* Card 5: Under ₹399 Bestselling kurtas (Charcoal Slate) */}
+          <div
+            className="amz-hero-deal-card card-charcoal"
+            onClick={() => navigate('/?search=kurta')}
+          >
+            <div className="amz-deal-header">
+              <h3 className="amz-deal-price-big">Under ₹399</h3>
+              <p className="amz-deal-subtitle">Bestselling kurtas</p>
+              <div className="amz-deal-pills-row">
+                <span className="amz-deal-badge-pill">Top brands</span>
+                <span className="amz-deal-badge-pill">Latest trends</span>
+              </div>
+            </div>
+
+            <div className="amz-deal-img-container">
+              <img
+                src="/amz_deal_kurtas.jpg"
+                alt="Bestselling kurtas under ₹399"
+                className="amz-deal-hero-img"
+              />
+            </div>
+
+            <div className="amz-icici-cashback-bar">
+              <div className="amz-icici-badge-pill">
+                <span className="amz-icici-badge-top">amazon pay</span>
+                <span className="amz-icici-badge-sub">ICICI Bank</span>
+              </div>
+              <span className="amz-icici-text">
+                Unlimited <strong>5% cashback*</strong> with Amazon Pay ICICI Bank credit card
+              </span>
+            </div>
+            <div className="amz-deal-tc">*T&C apply</div>
+          </div>
+
+          {/* Card 6: Starting ₹199 Colourful decor (Festive Emerald Green) */}
+          <div
+            className="amz-hero-deal-card card-green"
+            onClick={() => navigate('/?search=decor')}
+          >
+            <div className="amz-deal-header">
+              <h3 className="amz-deal-price-big">Starting ₹199</h3>
+              <p className="amz-deal-subtitle">Colourful decor</p>
+              <div className="amz-deal-pills-row">
+                <span className="amz-deal-badge-pill">Top brands</span>
+                <span className="amz-deal-badge-pill">Latest trends</span>
+              </div>
+            </div>
+
+            <div className="amz-deal-img-container">
+              <img
+                src="/amz_deal_decor.jpg"
+                alt="Colourful festive decor starting ₹199"
+                className="amz-deal-hero-img"
+              />
+            </div>
+
+            <div className="amz-icici-cashback-bar">
+              <div className="amz-icici-badge-pill">
+                <span className="amz-icici-badge-top">amazon pay</span>
+                <span className="amz-icici-badge-sub">ICICI Bank</span>
+              </div>
+              <span className="amz-icici-text">
+                Unlimited <strong>5% cashback*</strong> with Amazon Pay ICICI Bank credit card
+              </span>
+            </div>
+            <div className="amz-deal-tc">*T&C apply</div>
           </div>
         </div>
+
+        {canScrollRight && (
+          <button
+            type="button"
+            className="amz-carousel-arrow amz-carousel-arrow-right"
+            onClick={() => scrollCarousel('right')}
+            aria-label="Scroll right"
+          >
+            ›
+          </button>
+        )}
       </section>
 
       {/* ============================================================
-          4. CONTENT & 4-CARD FEATURE GRID (Exact match to screenshot)
+          4. MAIN CONTENT & REAL PRODUCTS SHOWCASE ROWS
           ============================================================ */}
       <main className="amz-main-content">
-        {/* The 4 Amazon Feature Cards */}
-        <div className="amz-card-grid">
-          {cardData.map((card) => {
-            const hasProduct = Boolean(card.product);
-            const prod = card.product;
-            const imgUrl = prod?.images?.[0]?.url || '/amazon_hero_banner.jpg';
-            const priceVal = prod?.price?.amount
-              ? Number(prod.price.amount).toLocaleString('en-IN')
-              : null;
-
-            return (
-
-              <div
-                key={card.id}
-                className="amz-feature-card"
-                onClick={() => {
-                  if (hasProduct && prod?._id) {
-                    navigate(`/product/${prod._id}`);
-                  }
-                }}
-                style={{ cursor: hasProduct ? 'pointer' : 'default' }}
-              >
-                <div className="amz-card-header">
-                  <h2 className="amz-card-title">{card.title}</h2>
-                </div>
-
-                <div className="amz-card-body">
-                  {hasProduct ? (
-                    <div
-                      className="amz-card-single-item"
-                      onClick={() => {
-                        if (prod?._id) {
-                          navigate(`/product/${prod._id}`);
-                        }
-                      }}
-                    >
-                      <div className="amz-card-image-box">
-                        <img src={imgUrl} alt={prod.title} loading="lazy" />
-                      </div>
-                      <div className="amz-card-product-info">
-                        <div className="amz-card-prod-title">{prod.title}</div>
-                        {priceVal && (
-                          <div className="amz-card-price-row">
-                            <span className="amz-price-symbol">₹</span>
-                            <span className="amz-price-value">{priceVal}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    /* Elegant placeholder quadrant showcase for category when no product fits */
-                    <div className="amz-quad-grid">
-                      <div className="amz-quad-item">
-                        <div className="amz-quad-img-wrapper">
-                          <img
-                            src="/amazon_hero_banner.jpg"
-                            alt={card.title}
-                            style={{ objectFit: 'cover' }}
-                          />
-                        </div>
-                        <span className="amz-quad-label">Popular picks</span>
-                      </div>
-                      <div className="amz-quad-item">
-                        <div className="amz-quad-img-wrapper">
-                          <img
-                            src="/amazon_hero_banner.jpg"
-                            alt={card.title}
-                            style={{ objectFit: 'cover' }}
-                          />
-                        </div>
-                        <span className="amz-quad-label">Top rated</span>
-                      </div>
-                      <div className="amz-quad-item">
-                        <div className="amz-quad-img-wrapper">
-                          <img
-                            src="/amazon_hero_banner.jpg"
-                            alt={card.title}
-                            style={{ objectFit: 'cover' }}
-                          />
-                        </div>
-                        <span className="amz-quad-label">Best deals</span>
-                      </div>
-                      <div className="amz-quad-item">
-                        <div className="amz-quad-img-wrapper">
-                          <img
-                            src="/amazon_hero_banner.jpg"
-                            alt={card.title}
-                            style={{ objectFit: 'cover' }}
-                          />
-                        </div>
-                        <span className="amz-quad-label">New arrivals</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="amz-card-footer">
-                  <span
-                    className="amz-card-action-link"
-                    onClick={(e) => {
-                      if (hasProduct && prod?._id) {
-                        e.stopPropagation();
-                        navigate(`/product/${prod._id}`);
-                      }
-                    }}
-                  >
-                    {card.actionText}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
 
         {/* ============================================================
             5. REAL PRODUCTS SHOWCASE ROWS (Directly from backend API)
@@ -343,7 +429,7 @@ const Home = () => {
                   >
                     {index === 0 && (
                       <div className="amz-badge-choice">
-                        Amazon's <span>Choice</span>
+                        Snitch's <span>Choice</span>
                       </div>
                     )}
 
@@ -574,10 +660,10 @@ const Home = () => {
           <div className="amz-footer-col">
             <h3>Get to Know Us</h3>
             <ul>
-              <li><a href="#about">About Amazon</a></li>
+              <li><a href="#about">About Snitch</a></li>
               <li><a href="#careers">Careers</a></li>
               <li><a href="#press">Press Releases</a></li>
-              <li><a href="#science">Amazon Science</a></li>
+              <li><a href="#science">Snitch Science</a></li>
             </ul>
           </div>
 
@@ -586,29 +672,29 @@ const Home = () => {
             <ul>
               <li>
                 <Link to={user?.role?.toLowerCase() === 'seller' ? '/dashboard' : '/login'}>
-                  Sell on Amazon
+                  Sell on Snitch
                 </Link>
               </li>
               <li><a href="#affiliate">Become an Affiliate</a></li>
-              <li><a href="#fulfillment">Fulfilment by Amazon</a></li>
+              <li><a href="#fulfillment">Fulfilment by Snitch</a></li>
               <li><a href="#advertise">Advertise Your Products</a></li>
             </ul>
           </div>
 
           <div className="amz-footer-col">
-            <h3>Amazon Payment Products</h3>
+            <h3>Snitch Payment Products</h3>
             <ul>
-              <li><a href="#card">Amazon Pay</a></li>
+              <li><a href="#card">Snitch Pay</a></li>
               <li><a href="#credit">Shop with Points</a></li>
               <li><a href="#reload">Reload Your Balance</a></li>
-              <li><a href="#currency">Amazon Currency Converter</a></li>
+              <li><a href="#currency">Snitch Currency Converter</a></li>
             </ul>
           </div>
 
           <div className="amz-footer-col">
             <h3>Let Us Help You</h3>
             <ul>
-              <li><a href="#covid">Amazon and COVID-19</a></li>
+              <li><a href="#covid">Snitch and COVID-19</a></li>
               <li><a href="#account">Your Account</a></li>
               <li><a href="#returns">Returns & Replacements</a></li>
               <li><a href="#help">Help</a></li>
@@ -619,28 +705,30 @@ const Home = () => {
         {/* Bottom bar with logo and copyright */}
         <div className="amz-footer-bottom">
           <div className="amz-footer-logo-row">
-            <svg
-              className="amz-logo-svg"
-              viewBox="0 0 100 30"
-              xmlns="http://www.w3.org/2000/svg"
-              style={{ height: '24px' }}
-            >
-              <path
-                d="M17.8 15.6c-.4-.7-.9-1.2-1.5-1.5-.6-.3-1.4-.5-2.3-.5-.9 0-1.7.2-2.3.5-.6.3-1.1.8-1.5 1.5-.4.7-.6 1.5-.6 2.5 0 1 .2 1.8.6 2.5.4.7.9 1.2 1.5 1.5.6.3 1.4.5 2.3.5.9 0 1.7-.2 2.3-.5.6-.3 1.1-.8 1.5-1.5.4-.7.6-1.5.6-2.5 0-1-.2-1.8-.6-2.5zm1.5-3.3v10.3c0 .8.1 1.4.3 1.8.2.4.6.6 1.1.6.4 0 .7-.1 1-.2v1.5c-.4.2-.9.3-1.6.3-.9 0-1.6-.3-2-1-.3-.5-.4-1.2-.4-2.1v-.8c-.7 1-1.5 1.7-2.4 2.2-.9.5-2 .7-3.1.7-1.3 0-2.4-.3-3.4-.8-1-.5-1.8-1.3-2.3-2.3-.5-1-.8-2.2-.8-3.5 0-1.3.3-2.5.8-3.5.5-1 1.3-1.8 2.3-2.3 1-.5 2.1-.8 3.4-.8 1.1 0 2.2.2 3.1.7.9.5 1.7 1.2 2.4 2.2v-2.9h1.6zm13.1-.3v14.4h-1.9v-7.8c0-1.2-.3-2.1-.8-2.7-.5-.6-1.3-.9-2.2-.9-.8 0-1.5.2-2.1.7-.6.5-1 1.2-1.2 2.1v8.6h-1.9v-14.4h1.7v2.2c.6-.8 1.3-1.4 2.1-1.8.8-.4 1.7-.6 2.6-.6 1.3 0 2.3.4 3 1.1.7.7 1 1.7 1 3.1v.4zm8.6 7.4c0 1.1.2 2 .7 2.7.5.7 1.2 1 2.1 1 .9 0 1.6-.3 2.1-1 .5-.7.7-1.6.7-2.7 0-1.1-.2-2-.7-2.7-.5-.7-1.2-1-2.1-1-.9 0-1.6.3-2.1 1-.5.7-.7 1.6-.7 2.7zm-1.9 0c0-1.5.4-2.8 1.1-3.8.7-1 1.8-1.5 3.1-1.5s2.4.5 3.1 1.5c.7 1 1.1 2.3 1.1 3.8s-.4 2.8-1.1 3.8c-.7 1-1.8 1.5-3.1 1.5s-2.4-.5-3.1-1.5c-.7-1-1.1-2.3-1.1-3.8zm14.8-7.4v2.1c.7-.8 1.4-1.4 2.2-1.8.8-.4 1.7-.6 2.7-.6 1.2 0 2.2.3 3 .9.8.6 1.2 1.6 1.2 2.9v10.9h-1.9v-10.4c0-1-.3-1.7-.8-2.2-.5-.5-1.2-.7-2.1-.7-.8 0-1.5.3-2.1.8-.6.5-1 1.2-1.2 2.1v10.4h-1.9v-14.4h1.7z"
-                fill="#ffffff"
-              />
-              <path
-                d="M7.7 24.3c9.9 5.8 24.7 6.4 37.6 1.8.8-.3 1.4.3.8.9-12.8 8.4-29.6 8.3-39.7.5-.7-.5-.2-1.2.7-.8l.6-2.4z"
-                fill="#ff9900"
-              />
-              <path
-                d="M48.2 23.5c-1.3 1.2-3.8 2.3-5.2 2.7-.4.1-.4-.3-.1-.6.9-.9 2.5-2.2 3.6-2.9 1.1-.7 2.6-.7 3.3-.4.7.4.2 1.7-1.6 1.2z"
-                fill="#ff9900"
-              />
-            </svg>
+            <div className="snitch-logo-wrap">
+              <span className="snitch-brand-text">snitch</span>
+              <svg
+                className="snitch-smile-curve"
+                viewBox="0 0 100 18"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M4 4c24 11 60 11 86 1"
+                  fill="none"
+                  stroke="#ff9900"
+                  strokeWidth="2.8"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M87 0l8 5-6 6z"
+                  fill="#ff9900"
+                />
+              </svg>
+            </div>
+            <span className="amz-logo-in-badge">.in</span>
           </div>
           <div className="amz-footer-copy">
-            © 1996–2026, Amazon.com, Inc. or its affiliates. All rights reserved.
+            © 2026, Snitch.in, Inc. or its affiliates. All rights reserved.
           </div>
         </div>
       </footer>

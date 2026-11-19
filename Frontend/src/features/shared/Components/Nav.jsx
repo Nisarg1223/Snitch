@@ -56,28 +56,28 @@ const Nav = () => {
           1. MAIN NAVIGATION BAR (#131921)
           ============================================================ */}
       <header className="amz-nav-main">
-        {/* Amazon Logo with smile arrow */}
-        <Link to="/" className="amz-nav-item amz-logo-link" aria-label="Amazon Home">
-          <svg
-            className="amz-logo-svg"
-            viewBox="0 0 100 30"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M17.8 15.6c-.4-.7-.9-1.2-1.5-1.5-.6-.3-1.4-.5-2.3-.5-.9 0-1.7.2-2.3.5-.6.3-1.1.8-1.5 1.5-.4.7-.6 1.5-.6 2.5 0 1 .2 1.8.6 2.5.4.7.9 1.2 1.5 1.5.6.3 1.4.5 2.3.5.9 0 1.7-.2 2.3-.5.6-.3 1.1-.8 1.5-1.5.4-.7.6-1.5.6-2.5 0-1-.2-1.8-.6-2.5zm1.5-3.3v10.3c0 .8.1 1.4.3 1.8.2.4.6.6 1.1.6.4 0 .7-.1 1-.2v1.5c-.4.2-.9.3-1.6.3-.9 0-1.6-.3-2-1-.3-.5-.4-1.2-.4-2.1v-.8c-.7 1-1.5 1.7-2.4 2.2-.9.5-2 .7-3.1.7-1.3 0-2.4-.3-3.4-.8-1-.5-1.8-1.3-2.3-2.3-.5-1-.8-2.2-.8-3.5 0-1.3.3-2.5.8-3.5.5-1 1.3-1.8 2.3-2.3 1-.5 2.1-.8 3.4-.8 1.1 0 2.2.2 3.1.7.9.5 1.7 1.2 2.4 2.2v-2.9h1.6zm13.1-.3v14.4h-1.9v-7.8c0-1.2-.3-2.1-.8-2.7-.5-.6-1.3-.9-2.2-.9-.8 0-1.5.2-2.1.7-.6.5-1 1.2-1.2 2.1v8.6h-1.9v-14.4h1.7v2.2c.6-.8 1.3-1.4 2.1-1.8.8-.4 1.7-.6 2.6-.6 1.3 0 2.3.4 3 1.1.7.7 1 1.7 1 3.1v.4zm8.6 7.4c0 1.1.2 2 .7 2.7.5.7 1.2 1 2.1 1 .9 0 1.6-.3 2.1-1 .5-.7.7-1.6.7-2.7 0-1.1-.2-2-.7-2.7-.5-.7-1.2-1-2.1-1-.9 0-1.6.3-2.1 1-.5.7-.7 1.6-.7 2.7zm-1.9 0c0-1.5.4-2.8 1.1-3.8.7-1 1.8-1.5 3.1-1.5s2.4.5 3.1 1.5c.7 1 1.1 2.3 1.1 3.8s-.4 2.8-1.1 3.8c-.7 1-1.8 1.5-3.1 1.5s-2.4-.5-3.1-1.5c-.7-1-1.1-2.3-1.1-3.8zm14.8-7.4v2.1c.7-.8 1.4-1.4 2.2-1.8.8-.4 1.7-.6 2.7-.6 1.2 0 2.2.3 3 .9.8.6 1.2 1.6 1.2 2.9v10.9h-1.9v-10.4c0-1-.3-1.7-.8-2.2-.5-.5-1.2-.7-2.1-.7-.8 0-1.5.3-2.1.8-.6.5-1 1.2-1.2 2.1v10.4h-1.9v-14.4h1.7z"
-              fill="#ffffff"
-            />
-            {/* Amazon Smile Curve */}
-            <path
-              d="M7.7 24.3c9.9 5.8 24.7 6.4 37.6 1.8.8-.3 1.4.3.8.9-12.8 8.4-29.6 8.3-39.7.5-.7-.5-.2-1.2.7-.8l.6-2.4z"
-              fill="#ff9900"
-            />
-            {/* Arrowhead */}
-            <path
-              d="M48.2 23.5c-1.3 1.2-3.8 2.3-5.2 2.7-.4.1-.4-.3-.1-.6.9-.9 2.5-2.2 3.6-2.9 1.1-.7 2.6-.7 3.3-.4.7.4.2 1.7-1.6 1.2z"
-              fill="#ff9900"
-            />
-          </svg>
+        {/* Snitch Logo with smile arrow */}
+        <Link to="/" className="amz-nav-item amz-logo-link" aria-label="Snitch Home">
+          <div className="snitch-logo-wrap">
+            <span className="snitch-brand-text">snitch</span>
+            <svg
+              className="snitch-smile-curve"
+              viewBox="0 0 100 18"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M4 4c24 11 60 11 86 1"
+                fill="none"
+                stroke="#ff9900"
+                strokeWidth="2.8"
+                strokeLinecap="round"
+              />
+              <path
+                d="M87 0l8 5-6 6z"
+                fill="#ff9900"
+              />
+            </svg>
+          </div>
           <span className="amz-logo-in-badge">.in</span>
         </Link>
 
@@ -122,12 +122,12 @@ const Nav = () => {
           <input
             type="text"
             className="amz-search-input"
-            placeholder="Search Amazon.in"
+            placeholder="Search Snitch.in"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => setIsSearchFocused(true)}
             onBlur={() => setIsSearchFocused(false)}
-            aria-label="Search Amazon"
+            aria-label="Search Snitch"
           />
 
           {searchQuery && (
@@ -302,7 +302,7 @@ const Nav = () => {
             type="button"
             className="amz-sub-link all-menu"
             onClick={() => setIsDrawerOpen(true)}
-            aria-label="Open Amazon Navigation Drawer"
+            aria-label="Open Snitch Navigation Drawer"
           >
             <svg
               className="amz-hamburger-icon"
@@ -323,7 +323,7 @@ const Nav = () => {
             All Products
           </Link>
           <Link to="/" className="amz-sub-link">
-            Amazon Pay
+            Snitch Pay
           </Link>
           <Link to="/" className="amz-sub-link">
             Mobiles
@@ -430,7 +430,7 @@ const Nav = () => {
                   className="amz-drawer-item"
                   onClick={() => setIsDrawerOpen(false)}
                 >
-                  Sell on Amazon <span>›</span>
+                  Sell on Snitch <span>›</span>
                 </Link>
               )}
 

@@ -315,8 +315,8 @@ const SellerProductDetails = () => {
       <div className="amz-spd-wrapper">
         <header className="amz-spd-header">
           <div className="amz-spd-header-top">
-            <Link to="/seller/dashboard" className="amz-spd-brand">
-              <span className="amz-spd-logo-text">amazon</span>
+            <Link to="/seller/dashboard" className="amz-spd-brand" title="Snitch Seller Central">
+              <span className="amz-spd-logo-text">snitch</span>
               <span className="amz-spd-seller-tag">Seller Central</span>
             </Link>
           </div>
@@ -350,8 +350,8 @@ const SellerProductDetails = () => {
       <div className="amz-spd-wrapper">
         <header className="amz-spd-header">
           <div className="amz-spd-header-top">
-            <Link to="/seller/dashboard" className="amz-spd-brand">
-              <span className="amz-spd-logo-text">amazon</span>
+            <Link to="/seller/dashboard" className="amz-spd-brand" title="Snitch Seller Central">
+              <span className="amz-spd-logo-text">snitch</span>
               <span className="amz-spd-seller-tag">Seller Central</span>
             </Link>
           </div>
@@ -410,8 +410,8 @@ const SellerProductDetails = () => {
       {/* 1. Header */}
       <header className="amz-spd-header">
         <div className="amz-spd-header-top">
-          <Link to="/seller/dashboard" className="amz-spd-brand" title="Amazon Seller Central">
-            <span className="amz-spd-logo-text">amazon</span>
+          <Link to="/seller/dashboard" className="amz-spd-brand" title="Snitch Seller Central">
+            <span className="amz-spd-logo-text">snitch</span>
             <span className="amz-spd-seller-tag">Seller Central</span>
           </Link>
 

@@ -216,9 +216,9 @@ const Dashboard = () => {
       <header className="amz-dash-header">
         <div className="amz-dash-header-top">
           {/* Logo & Seller Central Badge */}
-          <Link to="/" className="amz-dash-brand" title="Amazon Seller Central">
+          <Link to="/" className="amz-dash-brand" title="Snitch Seller Central">
             <div className="amz-dash-logo-combo">
-              <span className="amz-dash-logo-text">amazon</span>
+              <span className="amz-dash-logo-text">snitch</span>
               <span className="amz-dash-logo-smile">⌣</span>
             </div>
             <span className="amz-dash-seller-tag">Seller Central</span>
@@ -227,7 +227,7 @@ const Dashboard = () => {
           {/* Marketplace Indicator */}
           <div className="amz-dash-market-picker">
             <span>🇮🇳</span>
-            <span className="amz-dash-market-name-full">Amazon.in (India)</span>
+            <span className="amz-dash-market-name-full">Snitch.in (India)</span>
             <span style={{ fontSize: '0.65rem' }}>▼</span>
           </div>
 

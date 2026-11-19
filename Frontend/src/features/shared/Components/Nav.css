@@ -34,13 +34,37 @@
   border-color: #ffffff;
 }
 
-/* Amazon Logo */
+/* Snitch Logo */
 .amz-logo-link {
   display: flex;
   align-items: center;
   padding: 6px 8px;
   margin-right: 4px;
   text-decoration: none;
+}
+
+.snitch-logo-wrap {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  line-height: 1;
+  padding-top: 2px;
+}
+
+.snitch-brand-text {
+  font-family: "Amazon Ember", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.6px;
+  line-height: 0.9;
+  text-transform: lowercase;
+}
+
+.snitch-smile-curve {
+  width: 72px;
+  height: 11px;
+  margin-top: 1px;
 }
 
 .amz-logo-svg {

@@ -131,7 +131,7 @@ const Cart = () => {
             /* Empty State */
             <div className="amz-cart-empty-box">
               <div className="amz-cart-empty-icon">🛒</div>
-              <h2 className="amz-cart-empty-title">Your Amazon Cart is empty</h2>
+              <h2 className="amz-cart-empty-title">Your Snitch Cart is empty</h2>
               <p className="amz-cart-empty-desc">
                 Your shopping cart is waiting. Give it purpose – explore our catalog and add items you love.
               </p>
@@ -332,7 +332,7 @@ const Cart = () => {
 
       {/* Footer Disclaimer */}
       <footer className="amz-cart-footer-disclaimer">
-        The price and availability of items at Amazon are subject to change. The shopping cart is a temporary place to store a list of your items and reflects each item's most recent price.
+        The price and availability of items at Snitch are subject to change. The shopping cart is a temporary place to store a list of your items and reflects each item's most recent price.
       </footer>
     </div>
   );
