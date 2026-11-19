@@ -57,7 +57,6 @@ const ProductDetail = () => {
   const [cartSuccessBanner, setCartSuccessBanner] = useState(false);
   const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [toastMessage, setToastMessage] = useState(null);
 
   // Fetch cart on mount if authenticated
@@ -105,32 +104,11 @@ const ProductDetail = () => {
     setQuantity(1);
   };
 
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    navigate('/');
-  };
-
   // SKELETON LOADING STATE
   if (loading) {
     return (
       <div className="amz-pdp-root">
-        <header className="amz-pdp-nav-main">
-          <Link to="/" className="amz-pdp-nav-logo">
-            <span className="amz-pdp-logo-text">
-              amazon<span>.in</span>
-            </span>
-          </Link>
-          <div className="amz-pdp-nav-search">
-            <input
-              type="text"
-              className="amz-pdp-search-input"
-              placeholder="Search Amazon.in"
-              disabled
-            />
-          </div>
-        </header>
-
-        <div className="amz-pdp-skeleton-container">
+        <div className="amz-pdp-skeleton-container" style={{ marginTop: '20px' }}>
           <div className="amz-pdp-skeleton-box" style={{ height: '420px' }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div className="amz-pdp-skeleton-box" style={{ height: '32px', width: '70%' }} />
@@ -147,13 +125,6 @@ const ProductDetail = () => {
   if (!product) {
     return (
       <div className="amz-pdp-root">
-        <header className="amz-pdp-nav-main">
-          <Link to="/" className="amz-pdp-nav-logo">
-            <span className="amz-pdp-logo-text">
-              amazon<span>.in</span>
-            </span>
-          </Link>
-        </header>
         <div className="amz-pdp-notfound">
           <h2>Product Not Found</h2>
           <p>We couldn't find a product with ID: {productId}</p>
@@ -273,90 +244,6 @@ const ProductDetail = () => {
         </div>
       )}
 
-      {/* ============================================================
-          1. AMAZON TOP NAVIGATION
-          ============================================================ */}
-      <header className="amz-pdp-nav-main">
-        <Link to="/" className="amz-pdp-nav-logo" title="Amazon Home">
-          <span className="amz-pdp-logo-text">
-            amazon<span>.in</span>
-          </span>
-        </Link>
-
-        <div className="amz-pdp-nav-delivery" title="Deliver to India">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-            <circle cx="12" cy="10" r="3" />
-          </svg>
-          <div className="amz-pdp-nav-delivery-text">
-            <span className="amz-pdp-subtext">Deliver to</span>
-            <span className="amz-pdp-maintext">India</span>
-          </div>
-        </div>
-
-        <form className="amz-pdp-nav-search" onSubmit={handleSearchSubmit}>
-          <select className="amz-pdp-search-dropdown" defaultValue="All">
-            <option value="All">All</option>
-            <option value="Electronics">Electronics</option>
-            <option value="Fashion">Fashion</option>
-            <option value="Home">Home</option>
-          </select>
-          <input
-            type="text"
-            className="amz-pdp-search-input"
-            placeholder="Search Amazon.in"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <button type="submit" className="amz-pdp-search-btn" title="Search">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111" strokeWidth="2.5">
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-          </button>
-        </form>
-
-        <Link to={user ? '/' : '/login'} className="amz-pdp-nav-item">
-          <span className="amz-pdp-subtext">
-            Hello, {user?.fullname ? user.fullname.split(' ')[0] : 'sign in'}
-          </span>
-          <span className="amz-pdp-maintext">Account & Lists ▾</span>
-        </Link>
-
-        <Link to="/" className="amz-pdp-nav-item">
-          <span className="amz-pdp-subtext">Returns</span>
-          <span className="amz-pdp-maintext">& Orders</span>
-        </Link>
-
-        <div className="amz-pdp-cart-item" onClick={() => showToast(`Cart has ${cartCount} item(s)`)}>
-          <span className="amz-pdp-cart-badge">{cartCount}</span>
-          <svg width="34" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="9" cy="21" r="1" />
-            <circle cx="20" cy="21" r="1" />
-            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-          </svg>
-          <span className="amz-pdp-maintext" style={{ alignSelf: 'flex-end', marginBottom: '2px' }}>
-            Cart
-          </span>
-        </div>
-      </header>
-
-      {/* Subnav */}
-      <nav className="amz-pdp-nav-sub">
-        <div className="amz-pdp-sub-links">
-          <Link to="/" className="amz-pdp-sub-link">
-            <span>☰</span> All
-          </Link>
-          <Link to="/" className="amz-pdp-sub-link">All Products</Link>
-          <Link to="/" className="amz-pdp-sub-link">Customer Service</Link>
-          {user?.role?.toLowerCase() === 'seller' && (
-            <Link to="/seller/dashboard" className="amz-pdp-sub-link" style={{ color: '#febd69' }}>
-              Seller Dashboard
-            </Link>
-          )}
-        </div>
-      </nav>
-
       {/* Breadcrumb Navigation */}
       <div className="amz-pdp-top-bar">
         <div className="amz-pdp-breadcrumbs">
@@ -396,7 +283,7 @@ const ProductDetail = () => {
             <button
               type="button"
               className="amz-pdp-banner-btn amz-pdp-banner-btn-cart"
-              onClick={() => showToast(`Shopping cart contains ${cartCount} items`)}
+              onClick={() => navigate('/cart')}
             >
               View Cart
             </button>

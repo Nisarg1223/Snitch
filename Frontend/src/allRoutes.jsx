@@ -1,17 +1,31 @@
-import Login from './features/auth/pages/login.jsx'
-import { Routes, Route } from 'react-router-dom'
-import Home from './features/auth/pages/Home.jsx'
-import CreateProduct from './features/products/pages/CreateProduct.jsx'
-import Dashboard from './features/products/pages/Dashboard.jsx'
-import Protected from './features/components/Protected.jsx'
-import ProductDetail from './features/products/pages/ProductDetail.jsx'
-import SellerProductDetails from './features/products/pages/SellerProductDetails.jsx'
-import Cart from './features/cart/pages/Cart.jsx'
+import Login from './features/auth/pages/login.jsx';
+import { Routes, Route } from 'react-router-dom';
+import Home from './features/auth/pages/Home.jsx';
+import CreateProduct from './features/products/pages/CreateProduct.jsx';
+import Dashboard from './features/products/pages/Dashboard.jsx';
+import Protected from './features/components/Protected.jsx';
+import ProductDetail from './features/products/pages/ProductDetail.jsx';
+import SellerProductDetails from './features/products/pages/SellerProductDetails.jsx';
+import Cart from './features/cart/pages/Cart.jsx';
+import Applayout from './Applayout.jsx';
 
 const AllRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
+      {/* Shared Applayout containing Nav & child routes via Outlet */}
+      <Route element={<Applayout />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/product/:productId" element={<ProductDetail />} />
+        <Route
+          path="/cart"
+          element={
+            <Protected>
+              <Cart />
+            </Protected>
+          }
+        />
+      </Route>
+
       <Route path="/login" element={<Login />} />
       <Route
         path="/dashboard"
@@ -53,23 +67,16 @@ const AllRoutes = () => {
           </Protected>
         }
       />
-      <Route path="/product/:productId" element={<ProductDetail />} />
       <Route
         path="/seller/product/:productId"
         element={
           <Protected role="seller">
-           <SellerProductDetails/>
+            <SellerProductDetails />
           </Protected>
         }
       />
-      <Route path="/cart"  element={
-         <Protected>
-         <Cart/>
-          </Protected>
-      }
-      />
     </Routes>
-  )
-}
+  );
+};
 
-export default AllRoutes
+export default AllRoutes;
