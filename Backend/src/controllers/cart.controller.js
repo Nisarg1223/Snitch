@@ -139,59 +139,70 @@ export const getCart = async (req, res) => {
     }
 };
 
-export const IncrementCartItemQuantity = async(req,res)=>{
-    const {productId,variantId} = req.params;
+export const IncrementCartItemQuantity = async (req, res) => {
+    try {
+        const { productId, variantId } = req.params;
+        const hasVariant = Boolean(variantId && variantId !== "null" && variantId !== "undefined");
 
-    const product = await productModel.findOne({
-        _id:productId,
-        "variants._id":variantId
-    });
-
-    if(!product){
-        return res.status(404).json({
-            message:"product not found",
-            success:false
-        })
-    }
-     const cart = await cartModel.findOne({
-        user:req.user._id
-     })
-
-     if(!cart){
-        return res.status(404).json({
-            message:"cart not found",
-            success:false
-        })
-     }
-    const stock = await stockOfVariant(productId,variantId);
-    
-     const itemQuantityInCart = cart.items.find(item=>item.product.toString() === productId && item.variant?.toString() === variantId)?.quantity || 0
-
-     if(itemQuantityInCart + 1 > stock){
-        return res.status(400).json({
-            message:`Only ${stock} items left in the stock. and you already have ${itemQuantityInCart} items`,
-            success:false
-        })
-     }
-
-     await cartModel.findOneAndUpdate(
-        {
-            user:req.user._id,
-            "items.product":productId,
-            "items.product":variantId
-        },
-        {
-            $in:{
-                "items.$.quantity":1
-            }
-        },
-        {
-            new:true
+        const product = await productModel.findById(productId);
+        if (!product) {
+            return res.status(404).json({
+                message: "product not found",
+                success: false
+            });
         }
-     )
 
-     return res.status(200).json({
-        message:"Cart item quantity incremented successfully",
-        success:true
-     })
-}
+        const cart = await cartModel.findOne({
+            user: req.user._id
+        });
+
+        if (!cart) {
+            return res.status(404).json({
+                message: "cart not found",
+                success: false
+            });
+        }
+
+        const stock = await stockOfVariant(productId, hasVariant ? variantId : null);
+
+        const itemInCart = cart.items.find((item) => {
+            if (hasVariant) {
+                return item.product.toString() === productId && item.variant?.toString() === variantId.toString();
+            }
+            return item.product.toString() === productId && !item.variant;
+        });
+
+        if (!itemInCart) {
+            return res.status(404).json({
+                message: "Item not found in cart",
+                success: false
+            });
+        }
+
+        const itemQuantityInCart = itemInCart.quantity || 0;
+
+        if (itemQuantityInCart + 1 > stock) {
+            return res.status(400).json({
+                message: `Only ${stock} items left in stock, and you already have ${itemQuantityInCart} in your cart`,
+                success: false
+            });
+        }
+
+        itemInCart.quantity = itemQuantityInCart + 1;
+        await cart.save();
+
+        const updatedCart = await cartModel.findOne({ user: req.user._id }).populate("items.product");
+
+        return res.status(200).json({
+            message: "Cart item quantity incremented successfully",
+            success: true,
+            cart: updatedCart
+        });
+    } catch (err) {
+        console.error("Error in IncrementCartItemQuantity:", err);
+        return res.status(500).json({
+            message: err.message || "Failed to increment cart item quantity",
+            success: false
+        });
+    }
+};

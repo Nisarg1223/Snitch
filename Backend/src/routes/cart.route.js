@@ -10,6 +10,7 @@ cartRouter.post('/add/:productId', authenticateUser, validateAddToCart, addToCar
 cartRouter.post('/:productId/:variantId', authenticateUser, validateAddToCart, addToCart);
 cartRouter.post('/:productId', authenticateUser, validateAddToCart, addToCart);
 cartRouter.get('/', authenticateUser, getCart);
-cartRouter.patch('/quantity/increment/:productId/:variantId',authenticateUser,validateIncrementCartItemQuantity,IncrementCartItemQuantity);
+cartRouter.patch('/quantity/increment/:productId/:variantId', authenticateUser, validateIncrementCartItemQuantity, IncrementCartItemQuantity);
+cartRouter.patch('/quantity/increment/:productId', authenticateUser, validateIncrementCartItemQuantity, IncrementCartItemQuantity);
 
 export default cartRouter;

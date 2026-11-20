@@ -35,8 +35,25 @@ const cartSlice = createSlice({
                 state.items.push(payload);
             }
         },
+        incrementCartItem: (state, action) => {
+            const { productId, variantId } = action.payload;
+
+            state.items = state.items.map((item) => {
+                const itemProdId = item.product?._id?.toString() || item.product?.toString() || item.productId;
+                const itemVarId = item.variant?._id?.toString() || item.variant?.toString() || item.variantId || null;
+                const targetVarId = variantId ? variantId.toString() : null;
+
+                const isProductMatch = itemProdId === productId;
+                const isVariantMatch = targetVarId ? itemVarId === targetVarId : !itemVarId;
+
+                if (isProductMatch && isVariantMatch) {
+                    return { ...item, quantity: (Number(item.quantity) || 0) + 1 };
+                }
+                return item;
+            });
+        }
     }
 });
 
-export const { setCart, setItems, addItems } = cartSlice.actions;
+export const { setCart, setItems, addItems,incrementCartItem } = cartSlice.actions;
 export default cartSlice.reducer;

@@ -30,7 +30,7 @@ const formatPrice = (amount, currency = 'INR') => {
 const Cart = () => {
   const navigate = useNavigate();
   const user = useSelector((state) => state.auth?.user);
-  const { cartItems, cartCount, handleGetCart, handleAddItem } = useCart();
+  const { cartItems, cartCount, handleGetCart, handleAddItem,handleIncrementCartItem } = useCart();
 
   const [loading, setLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState(null);
@@ -75,15 +75,14 @@ const Cart = () => {
     return { subtotalAmount: amount, totalQuantity: units };
   }, [cartItems]);
 
-  const handleIncrement = async (item) => {
+  const handleIncrement = async (item, matchedVariant) => {
     const prodId = item.product?._id || item.product;
-    const varId = item.variant;
+    const varId = matchedVariant?._id || item.variant || null;
     try {
       setUpdatingItemId(item._id || prodId);
-      await handleAddItem({
+      await handleIncrementCartItem({
         productId: prodId,
         variantId: varId,
-        quantity: 1,
       });
       showToast('Cart updated');
     } catch (err) {
@@ -226,7 +225,7 @@ const Cart = () => {
                           <button
                             type="button"
                             className="amz-cart-qty-btn"
-                            onClick={() => handleIncrement(item)}
+                            onClick={() => handleIncrement(item, matchedVariant)}
                             disabled={isUpdating}
                             title="Add one more"
                           >

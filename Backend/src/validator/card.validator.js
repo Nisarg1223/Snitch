@@ -25,6 +25,10 @@ export const validateAddToCart = [
 
 export const validateIncrementCartItemQuantity = [
     param("productId").isMongoId().withMessage("invalide product id"),
-    param("variantId").optional().isMongoId().withMessage("invalide variant id"),
+    param("variantId").optional().custom((val) => {
+        if (!val || val === "null" || val === "undefined") return true;
+        if (!mongoose.isValidObjectId(val)) throw new Error("Invalid variant Id");
+        return true;
+    }),
     validateRequest
-]
+];
