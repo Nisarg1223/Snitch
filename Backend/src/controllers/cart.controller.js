@@ -118,16 +118,24 @@ export const getCart = async (req, res) => {
             user: user._id
         }).populate("items.product");
 
-        if (!cart) {
+         if (!cart) {
             cart = await cartModel.create({
                 user: user._id,
                 items: []
             });
-            return res.status(200).json({ success: true, cart });
+            return res.status(200).json({ 
+                success: true, 
+                cart,
+                subtotal: { amount: 0, currency: "INR" }, 
+                totalQuantity: 0                          
+            });
         }
 
         let isPriceChanged = false;
 
+
+         let subtotalAmount = 0;
+        let totalQuantity = 0;
         // Loop through cart items and sync with current live price
         cart.items.forEach((item) => {
             if (!item.product) return;
@@ -152,6 +160,10 @@ export const getCart = async (req, res) => {
                 item.price.currency = currentPrice.currency || item.price.currency;
                 isPriceChanged = true;
             }
+            const qty = Number(item.quantity) || 1;
+            const unitPrice = Number(currentPrice?.amount ?? item.price?.amount ?? 0);
+            subtotalAmount += unitPrice * qty;
+            totalQuantity += qty;
         });
 
         // Save updated cart to DB only if any price changed
@@ -162,7 +174,12 @@ export const getCart = async (req, res) => {
         return res.status(200).json({
             message: "cart fetched successfully",
             success: true,
-            cart
+            cart,
+            subtotal: {
+                amount: subtotalAmount,
+                currency: "INR"
+            },
+            totalQuantity
         });
     } catch (err) {
         console.error("Error in getCart:", err);

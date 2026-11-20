@@ -4,16 +4,32 @@ const cartSlice = createSlice({
   name: "cart",
   initialState: {
     items: [],
+    subtotal: { amount: 0, currency: "INR" },
+    totalQuantity: 0,
   },
   reducers: {
     setCart: (state, action) => {
       const payload = action.payload;
+      if (!payload) return;
+
       if (Array.isArray(payload)) {
         state.items = payload;
-      } else if (payload?.items && Array.isArray(payload.items)) {
-        state.items = payload.items;
       } else if (payload?.cart?.items && Array.isArray(payload.cart.items)) {
         state.items = payload.cart.items;
+      } else if (payload?.items && Array.isArray(payload.items)) {
+        state.items = payload.items;
+      }
+
+      if (payload?.subtotal) {
+        state.subtotal = payload.subtotal;
+      } else if (payload?.cart?.subtotal) {
+        state.subtotal = payload.cart.subtotal;
+      }
+
+      if (payload?.totalQuantity != null) {
+        state.totalQuantity = payload.totalQuantity;
+      } else if (payload?.cart?.totalQuantity != null) {
+        state.totalQuantity = payload.cart.totalQuantity;
       }
     },
     setItems: (state, action) => {

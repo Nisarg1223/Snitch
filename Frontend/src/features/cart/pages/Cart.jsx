@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useCart } from '../hook/useCart.js';
@@ -30,7 +30,16 @@ const formatPrice = (amount, currency = 'INR') => {
 const Cart = () => {
   const navigate = useNavigate();
   const user = useSelector((state) => state.auth?.user);
-  const { cartItems, cartCount, handleGetCart, handleAddItem, handleIncrementCartItem, handleDecrementCartItem } = useCart();
+  const {
+    cartItems,
+    cartCount,
+    subtotal,
+    totalQuantity: apiTotalQuantity,
+    handleGetCart,
+    handleAddItem,
+    handleIncrementCartItem,
+    handleDecrementCartItem,
+  } = useCart();
 
   const [loading, setLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState(null);
@@ -62,18 +71,10 @@ const Cart = () => {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  // Live calculation of subtotal based solely on active cart items
-  const { subtotalAmount, totalQuantity } = useMemo(() => {
-    let amount = 0;
-    let units = 0;
-    cartItems.forEach((item) => {
-      const qty = Number(item.quantity) || 1;
-      const price = Number(item.price?.amount ?? item.product?.price?.amount ?? 0);
-      amount += price * qty;
-      units += qty;
-    });
-    return { subtotalAmount: amount, totalQuantity: units };
-  }, [cartItems]);
+  // Subtotal and total item count are retrieved directly from the backend API response
+  const subtotalAmount = Number(subtotal?.amount) || 0;
+  const subtotalCurrency = subtotal?.currency || 'INR';
+  const totalQuantity = apiTotalQuantity ?? cartCount;
 
   const handleIncrement = async (item, matchedVariant) => {
     const prodId = item.product?._id || item.product;
@@ -305,7 +306,7 @@ const Cart = () => {
               {/* Bottom Subtotal inside Cart Box */}
               <div className="amz-cart-bottom-subtotal">
                 Subtotal ({totalQuantity} {totalQuantity === 1 ? 'item' : 'items'}):{' '}
-                <strong>{formatPrice(subtotalAmount)}</strong>
+                <strong>{formatPrice(subtotalAmount, subtotalCurrency)}</strong>
               </div>
             </div>
           )}
@@ -317,7 +318,7 @@ const Cart = () => {
             <div className="amz-cart-summary-card">
               <div className="amz-cart-summary-subtotal">
                 Subtotal ({totalQuantity} {totalQuantity === 1 ? 'item' : 'items'}):{' '}
-                <strong>{formatPrice(subtotalAmount)}</strong>
+                <strong>{formatPrice(subtotalAmount, subtotalCurrency)}</strong>
               </div>
 
               <label className="amz-cart-gift-row">

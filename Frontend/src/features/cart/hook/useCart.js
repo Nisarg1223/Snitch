@@ -6,12 +6,15 @@ import { addItems, setCart,incrementCartItem ,decrementCartItem} from '../state/
 export const useCart = () => {
     const dispatch = useDispatch();
     const cartItems = useSelector((state) => state.cart?.items || []);
-    const cartCount = cartItems.reduce((acc, item) => acc + (Number(item?.quantity) || 1), 0);
+    const subtotal = useSelector((state) => state.cart?.subtotal || { amount: 0, currency: 'INR' });
+    const totalQuantity = useSelector((state) => state.cart?.totalQuantity || 0);
+    const cartCount = totalQuantity || cartItems.reduce((acc, item) => acc + (Number(item?.quantity) || 1), 0);
 
     const handleAddItem = useCallback(async ({ productId, variantId, quantity = 1 }) => {
         const data = await addItem({ productId, variantId, quantity });
         if (data?.cart) {
-            dispatch(setCart(data.cart));
+            dispatch(setCart(data));
+            await handleGetCart();
         } else {
             dispatch(addItems(data));
         }
@@ -21,8 +24,8 @@ export const useCart = () => {
     const handleGetCart = useCallback(async () => {
         try {
             const data = await getCart();
-            if (data?.cart) {
-                dispatch(setCart(data.cart));
+            if (data) {
+                dispatch(setCart(data));
             }
             return data;
         } catch (err) {
@@ -33,27 +36,29 @@ export const useCart = () => {
 
     const handleIncrementCartItem = useCallback(async ({ productId, variantId }) => {
         const data = await IncrementCartItemApi({ productId, variantId });
-        if (data?.cart) {
-            dispatch(setCart(data.cart));
+        if (data) {
+            await handleGetCart();
         } else {
             dispatch(incrementCartItem({ productId, variantId }));
         }
         return data;
-    }, [dispatch]);
+    }, [dispatch, handleGetCart]);
    
-     const handleDecrementCartItem = useCallback(async ({ productId, variantId }) => {
-    const data = await DecrementCartItemApi({ productId, variantId });
-    if (data?.cart) {
-        dispatch(setCart(data.cart));
-    } else {
-        dispatch(decrementCartItem({ productId, variantId }));
-    }
-    return data;
-}, [dispatch]);
+    const handleDecrementCartItem = useCallback(async ({ productId, variantId }) => {
+        const data = await DecrementCartItemApi({ productId, variantId });
+        if (data) {
+            await handleGetCart();
+        } else {
+            dispatch(decrementCartItem({ productId, variantId }));
+        }
+        return data;
+    }, [dispatch, handleGetCart]);
 
     return {
         cartItems,
         cartCount,
+        subtotal,
+        totalQuantity,
         handleAddItem,
         handleGetCart,
         handleIncrementCartItem,
