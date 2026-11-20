@@ -206,3 +206,72 @@ export const IncrementCartItemQuantity = async (req, res) => {
         });
     }
 };
+export const DecrementCartItemQuantity = async (req, res) => {
+    try {
+        const { productId, variantId } = req.params;
+        const hasVariant = Boolean(variantId && variantId !== "null" && variantId !== "undefined");
+
+        // 1. Verify the product exists
+        const product = await productModel.findById(productId);
+        if (!product) {
+            return res.status(404).json({
+                message: "Product not found",
+                success: false
+            });
+        }
+
+        // 2. Find the user's cart
+        const cart = await cartModel.findOne({
+            user: req.user._id
+        });
+
+        if (!cart) {
+            return res.status(404).json({
+                message: "Cart not found",
+                success: false
+            });
+        }
+
+        // 3. Locate the item in the cart (handling both variant & non-variant products)
+        const itemInCart = cart.items.find((item) => {
+            if (hasVariant) {
+                return item.product.toString() === productId && item.variant?.toString() === variantId.toString();
+            }
+            return item.product.toString() === productId && !item.variant;
+        });
+
+        if (!itemInCart) {
+            return res.status(404).json({
+                message: "Item not found in cart",
+                success: false
+            });
+        }
+
+        // 4. Condition check: minimum quantity must be 1 (cannot decrement below 1)
+        if (itemInCart.quantity <= 1) {
+            return res.status(400).json({
+                message: "Quantity cannot be less than 1",
+                success: false
+            });
+        }
+
+        // 5. Decrement quantity by 1 and save
+        itemInCart.quantity -= 1;
+        await cart.save();
+
+        // 6. Return populated cart
+        const updatedCart = await cartModel.findOne({ user: req.user._id }).populate("items.product");
+
+        return res.status(200).json({
+            message: "Cart item quantity decremented successfully",
+            success: true,
+            cart: updatedCart
+        });
+    } catch (err) {
+        console.error("Error in DecrementCartItemQuantity:", err);
+        return res.status(500).json({
+            message: err.message || "Failed to decrement cart item quantity",
+            success: false
+        });
+    }
+};

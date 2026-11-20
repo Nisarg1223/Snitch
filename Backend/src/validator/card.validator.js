@@ -32,3 +32,13 @@ export const validateIncrementCartItemQuantity = [
     }),
     validateRequest
 ];
+
+export const validateDecrementCartItemQuantity = [
+    param("productId").isMongoId().withMessage("Invalid product id"),
+    param("variantId").optional().custom((val) => {
+        if (!val || val === "null" || val === "undefined") return true;
+        if (!mongoose.isValidObjectId(val)) throw new Error("Invalid variant id");
+        return true;
+    }),
+    validateRequest
+];

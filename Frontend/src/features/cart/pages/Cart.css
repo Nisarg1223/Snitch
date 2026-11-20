@@ -471,21 +471,33 @@
   border-radius: 8px;
   padding: 2px 4px;
   box-shadow: 0 1px 2px rgba(15, 17, 17, 0.15);
+  gap: 2px;
+}
+
+.amz-cart-qty-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #565959;
+  padding: 0 4px 0 6px;
+  user-select: none;
 }
 
 .amz-cart-qty-btn {
   background: none;
   border: none;
-  padding: 4px 8px;
-  font-size: 14px;
+  padding: 2px 6px;
+  font-size: 15px;
   font-weight: 700;
   color: #0f1111;
   cursor: pointer;
   border-radius: 4px;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, opacity 0.15s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  line-height: 1;
 }
 
 .amz-cart-qty-btn:hover:not(:disabled) {
@@ -493,14 +505,24 @@
 }
 
 .amz-cart-qty-btn:disabled {
-  opacity: 0.4;
+  opacity: 0.3;
   cursor: not-allowed;
+}
+
+.amz-cart-qty-minus {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.amz-cart-qty-plus {
+  font-size: 15px;
+  line-height: 1;
 }
 
 .amz-cart-qty-val {
   font-size: 13px;
   font-weight: 700;
-  padding: 0 8px;
+  padding: 0 6px;
   min-width: 18px;
   text-align: center;
 }

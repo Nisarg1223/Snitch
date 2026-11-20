@@ -30,7 +30,7 @@ const formatPrice = (amount, currency = 'INR') => {
 const Cart = () => {
   const navigate = useNavigate();
   const user = useSelector((state) => state.auth?.user);
-  const { cartItems, cartCount, handleGetCart, handleAddItem,handleIncrementCartItem } = useCart();
+  const { cartItems, cartCount, handleGetCart, handleAddItem, handleIncrementCartItem, handleDecrementCartItem } = useCart();
 
   const [loading, setLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState(null);
@@ -87,6 +87,30 @@ const Cart = () => {
       showToast('Cart updated');
     } catch (err) {
       console.error('Error incrementing item quantity:', err);
+      const msg = err?.response?.data?.message || err?.message || 'Failed to update quantity';
+      showToast(`⚠️ ${msg}`);
+    } finally {
+      setUpdatingItemId(null);
+    }
+  };
+
+  const handleDecrement = async (item, matchedVariant) => {
+    const currentQty = Number(item.quantity) || 1;
+    if (currentQty <= 1) {
+      showToast('Minimum quantity is 1');
+      return;
+    }
+    const prodId = item.product?._id || item.product;
+    const varId = matchedVariant?._id || item.variant || null;
+    try {
+      setUpdatingItemId(item._id || prodId);
+      await handleDecrementCartItem({
+        productId: prodId,
+        variantId: varId,
+      });
+      showToast('Cart updated');
+    } catch (err) {
+      console.error('Error decrementing item quantity:', err);
       const msg = err?.response?.data?.message || err?.message || 'Failed to update quantity';
       showToast(`⚠️ ${msg}`);
     } finally {
@@ -213,21 +237,25 @@ const Cart = () => {
                       {/* Actions: Qty Counter, Delete, Save, Share */}
                       <div className="amz-cart-actions-row">
                         <div className="amz-cart-qty-pill">
+                          <span className="amz-cart-qty-label">Qty:</span>
                           <button
                             type="button"
-                            className="amz-cart-qty-btn"
-                            title="Quantity"
-                            disabled
+                            className="amz-cart-qty-btn amz-cart-qty-minus"
+                            onClick={() => handleDecrement(item, matchedVariant)}
+                            disabled={isUpdating || qty <= 1}
+                            title={qty <= 1 ? 'Minimum quantity is 1' : 'Decrease quantity'}
+                            aria-label="Decrease quantity"
                           >
-                            Qty:
+                            −
                           </button>
                           <span className="amz-cart-qty-val">{qty}</span>
                           <button
                             type="button"
-                            className="amz-cart-qty-btn"
+                            className="amz-cart-qty-btn amz-cart-qty-plus"
                             onClick={() => handleIncrement(item, matchedVariant)}
                             disabled={isUpdating}
-                            title="Add one more"
+                            title="Increase quantity"
+                            aria-label="Increase quantity"
                           >
                             +
                           </button>
