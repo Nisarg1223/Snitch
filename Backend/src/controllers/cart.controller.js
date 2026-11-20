@@ -123,6 +123,40 @@ export const getCart = async (req, res) => {
                 user: user._id,
                 items: []
             });
+            return res.status(200).json({ success: true, cart });
+        }
+
+        let isPriceChanged = false;
+
+        // Loop through cart items and sync with current live price
+        cart.items.forEach((item) => {
+            if (!item.product) return;
+
+            const product = item.product;
+            let currentPrice = null;
+
+            // If item has a variant, get the variant's latest price
+            if (item.variant) {
+                const variantsList = product.varients || product.variants || [];
+                const matchedVariant = variantsList.find(
+                    (v) => v._id && v._id.toString() === item.variant.toString()
+                );
+                currentPrice = matchedVariant?.price || product.price;
+            } else {
+                currentPrice = product.price;
+            }
+
+            // If the live price differs from the stored price, update it
+            if (currentPrice && currentPrice.amount !== item.price.amount) {
+                item.price.amount = currentPrice.amount;
+                item.price.currency = currentPrice.currency || item.price.currency;
+                isPriceChanged = true;
+            }
+        });
+
+        // Save updated cart to DB only if any price changed
+        if (isPriceChanged) {
+            await cart.save();
         }
 
         return res.status(200).json({
