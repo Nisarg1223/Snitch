@@ -39,6 +39,7 @@ const Cart = () => {
     handleAddItem,
     handleIncrementCartItem,
     handleDecrementCartItem,
+    handleDeleteCartItem,
   } = useCart();
 
   const [loading, setLoading] = useState(true);
@@ -113,6 +114,25 @@ const Cart = () => {
     } catch (err) {
       console.error('Error decrementing item quantity:', err);
       const msg = err?.response?.data?.message || err?.message || 'Failed to update quantity';
+      showToast(`⚠️ ${msg}`);
+    } finally {
+      setUpdatingItemId(null);
+    }
+  };
+
+  const handleDelete = async (item, matchedVariant) => {
+    const prodId = item.product?._id || item.product;
+    const varId = matchedVariant?._id || item.variant || null;
+    try {
+      setUpdatingItemId(item._id || prodId);
+      await handleDeleteCartItem({
+        productId: prodId,
+        variantId: varId,
+      });
+      showToast('Item removed from cart');
+    } catch (err) {
+      console.error('Error deleting cart item:', err);
+      const msg = err?.response?.data?.message || err?.message || 'Failed to remove item';
       showToast(`⚠️ ${msg}`);
     } finally {
       setUpdatingItemId(null);
@@ -264,10 +284,12 @@ const Cart = () => {
                         <span className="amz-cart-action-pipe">|</span>
                         <button
                           type="button"
-                          className="amz-cart-action-link"
-                          onClick={() => showToast('Feature available in next release')}
+                          className="amz-cart-action-link amz-cart-delete-btn"
+                          onClick={() => handleDelete(item, matchedVariant)}
+                          disabled={isUpdating}
+                          title="Delete item from cart"
                         >
-                          Delete
+                          {isUpdating ? 'Deleting...' : 'Delete'}
                         </button>
                         <span className="amz-cart-action-pipe">|</span>
                         <button

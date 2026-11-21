@@ -326,3 +326,72 @@ export const DecrementCartItemQuantity = async (req, res) => {
         });
     }
 };
+
+export const deleteCartItem = async (req, res) => {
+    try {
+        const { productId, variantId } = req.params;
+        const hasVariant = Boolean(variantId && variantId !== "null" && variantId !== "undefined");
+
+        // 1. Find user's cart
+        const cart = await cartModel.findOne({
+            user: req.user._id
+        });
+
+        if (!cart) {
+            return res.status(404).json({
+                message: "Cart not found",
+                success: false
+            });
+        }
+
+        // 2. Locate the index of the item to delete (handling variant & non-variant products)
+        const itemIndex = cart.items.findIndex((item) => {
+            if (hasVariant) {
+                return item.product.toString() === productId && item.variant?.toString() === variantId.toString();
+            }
+            return item.product.toString() === productId && !item.variant;
+        });
+
+        if (itemIndex === -1) {
+            return res.status(404).json({
+                message: "Item not found in cart",
+                success: false
+            });
+        }
+
+        // 3. Remove the item from cart array
+        cart.items.splice(itemIndex, 1);
+        await cart.save();
+
+        // 4. Fetch populated cart and calculate updated subtotal & totalQuantity
+        const updatedCart = await cartModel.findOne({ user: req.user._id }).populate("items.product");
+
+        let subtotalAmount = 0;
+        let totalQuantity = 0;
+
+        updatedCart.items.forEach((item) => {
+            if (!item.product) return;
+            const qty = Number(item.quantity) || 1;
+            totalQuantity += qty;
+            const unitPrice = Number(item.price?.amount || item.product?.price?.amount || 0);
+            subtotalAmount += unitPrice * qty;
+        });
+
+        return res.status(200).json({
+            message: "Item removed from cart successfully",
+            success: true,
+            cart: updatedCart,
+            subtotal: {
+                amount: subtotalAmount,
+                currency: "INR"
+            },
+            totalQuantity
+        });
+    } catch (err) {
+        console.error("Error in deleteCartItem:", err);
+        return res.status(500).json({
+            message: err.message || "Failed to remove item from cart",
+            success: false
+        });
+    }
+};

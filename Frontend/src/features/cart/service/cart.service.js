@@ -37,3 +37,11 @@ export const DecrementCartItemApi = async ({ productId, variantId }) => {
     const response = await api.patch(url);
     return response.data;
 };
+
+export const DeleteCartItemApi = async ({ productId, variantId }) => {
+    const url = (variantId && variantId !== "null" && variantId !== "undefined")
+        ? `/remove/${productId}/${variantId}`
+        : `/remove/${productId}`;
+    const response = await api.delete(url);
+    return response.data;
+};

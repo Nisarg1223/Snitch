@@ -106,9 +106,33 @@ const cartSlice = createSlice({
         return item;
       });
     },
+        removeCartItem: (state, action) => {
+      const { productId, variantId } = action.payload;
+
+      state.items = state.items.filter((item) => {
+        const itemProdId =
+          item.product?._id?.toString() ||
+          item.product?.toString() ||
+          item.productId;
+        const itemVarId =
+          item.variant?._id?.toString() ||
+          item.variant?.toString() ||
+          item.variantId ||
+          null;
+        const targetVarId = variantId ? variantId.toString() : null;
+
+        const isProductMatch = itemProdId === productId;
+        const isVariantMatch = targetVarId
+          ? itemVarId === targetVarId
+          : !itemVarId;
+
+        // Remove item if both product and variant match (keep everything else)
+        return !(isProductMatch && isVariantMatch);
+      });
+    },
   },
 });
 
-export const { setCart, setItems, addItems, incrementCartItem,decrementCartItem } =
+export const { setCart, setItems, addItems, incrementCartItem,decrementCartItem ,removeCartItem} =
   cartSlice.actions;
 export default cartSlice.reducer;

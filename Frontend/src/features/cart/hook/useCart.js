@@ -1,7 +1,19 @@
 import { useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { addItem, getCart,IncrementCartItemApi,DecrementCartItemApi } from '../service/cart.service.js';
-import { addItems, setCart,incrementCartItem ,decrementCartItem} from '../state/cart.slice.js';
+import { 
+    addItem, 
+    getCart, 
+    IncrementCartItemApi, 
+    DecrementCartItemApi,
+    DeleteCartItemApi 
+} from '../service/cart.service.js';
+import { 
+    addItems, 
+    setCart, 
+    incrementCartItem, 
+    decrementCartItem,
+    removeCartItem 
+} from '../state/cart.slice.js';
 
 export const useCart = () => {
     const dispatch = useDispatch();
@@ -54,6 +66,18 @@ export const useCart = () => {
         return data;
     }, [dispatch, handleGetCart]);
 
+    const handleDeleteCartItem = useCallback(async ({ productId, variantId }) => {
+    // 1. Call delete API (returns updated cart + subtotal)
+    const data = await DeleteCartItemApi({ productId, variantId });
+
+    // 2. Directly update Redux with the data we just received
+    if (data?.cart) {
+        dispatch(setCart(data));
+    }
+    
+    return data;
+}, [dispatch]);
+
     return {
         cartItems,
         cartCount,
@@ -62,6 +86,7 @@ export const useCart = () => {
         handleAddItem,
         handleGetCart,
         handleIncrementCartItem,
-        handleDecrementCartItem
+        handleDecrementCartItem,
+        handleDeleteCartItem
     };
 };

@@ -535,11 +535,18 @@
   cursor: pointer;
   padding: 0;
   text-decoration: none;
+  transition: color 0.15s ease, opacity 0.15s ease;
 }
 
-.amz-cart-action-link:hover {
+.amz-cart-action-link:hover:not(:disabled) {
   color: var(--amz-link-hover);
   text-decoration: underline;
+}
+
+.amz-cart-action-link:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  text-decoration: none;
 }
 
 .amz-cart-action-pipe {
