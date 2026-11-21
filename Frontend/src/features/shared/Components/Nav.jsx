@@ -319,6 +319,27 @@ const Nav = () => {
             <span>All</span>
           </button>
 
+          {/* Snitch Movie Zone (Attention-Seeking Highlighted Button) */}
+          <a
+            href="https://movie-app-kappa-brown-49.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="amz-sub-link snitch-movie-zone-btn"
+            title="Watch Movies & Series on Snitch Movie Zone"
+          >
+            <svg
+              className="smz-play-icon"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              width="13"
+              height="13"
+            >
+              <path d="M8 5v14l11-7z" />
+            </svg>
+            <span className="smz-text">Snitch Movie Zone</span>
+            <span className="smz-badge">WATCH FREE</span>
+          </a>
+
           <Link to="/" className="amz-sub-link">
             All Products
           </Link>
@@ -374,6 +395,20 @@ const Nav = () => {
               <span className="amz-drawer-username">
                 Hello, {user ? user.fullname : 'Sign In'}
               </span>
+            </div>
+
+            <div className="amz-drawer-section">
+              <h3 className="amz-drawer-heading">Digital Content & Entertainment</h3>
+              <a
+                href="https://movie-app-kappa-brown-49.vercel.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="amz-drawer-item smz-drawer-highlight"
+                onClick={() => setIsDrawerOpen(false)}
+              >
+                <span>🎬 Snitch Movie Zone</span>
+                <span className="smz-drawer-pill">Watch Free</span>
+              </a>
             </div>
 
             <div className="amz-drawer-section">
