@@ -216,3 +216,53 @@ export async function addProductVariant(req, res) {
     });
   }
 }
+
+import cartModel from "../models/cart.model.js"; // (Optional: to remove deleted product from active carts)
+
+export async function deleteProduct(req, res) {
+  try {
+    const productId = req.params.productId || req.params.id;
+
+    // 1. Validate Product ID
+    if (!mongoose.isValidObjectId(productId)) {
+      return res.status(400).json({
+        message: "Invalid product ID",
+        success: false,
+      });
+    }
+
+    // 2. Security Check: Find the product and verify the seller owns it
+    const product = await productModel.findOne({
+      _id: productId,
+      seller: req.user._id,
+    });
+
+    if (!product) {
+      return res.status(404).json({
+        message: "Product not found or you are not authorized to delete it",
+        success: false,
+      });
+    }
+
+    // 3. Delete the product from the database
+    await productModel.findByIdAndDelete(productId);
+
+    // 4. (Best Practice) Remove the deleted product from any user's active cart
+    await cartModel.updateMany(
+      { "items.product": productId },
+      { $pull: { items: { product: productId } } }
+    );
+
+    return res.status(200).json({
+      message: "Product deleted successfully",
+      success: true,
+      deletedProductId: productId,
+    });
+  } catch (error) {
+    console.error("Error in deleteProduct:", error);
+    return res.status(500).json({
+      message: error.message || "Failed to delete product",
+      success: false,
+    });
+  }
+}
