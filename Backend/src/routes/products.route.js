@@ -1,8 +1,8 @@
 import {Router} from 'express';
 import { authenticateSeller } from '../middlewares/auth.middleware.js';
-import { addProductVariant, createProduct, getProductDetails, getSellerProducts ,deleteProduct} from '../controllers/product.controller.js';
+import { addProductVariant, createProduct, getProductDetails, getSellerProducts ,deleteProduct,updateProductDetails} from '../controllers/product.controller.js';
 import multer from 'multer';
-import { createProductValidator } from '../validator/product.validator.js';
+import { createProductValidator,updateProductValidator } from '../validator/product.validator.js';
 import { getAllProducts } from '../controllers/product.controller.js';
 const productRouter = Router();
 
@@ -24,4 +24,14 @@ productRouter.post('/:productId/variants',authenticateSeller,upload.array('image
 
 // 🗑️ Seller delete product route (Protected: Only authenticated sellers)
 productRouter.delete('/:productId', authenticateSeller, deleteProduct);
+
+// ✏️ Update product details (Partial update using PATCH)
+productRouter.patch(
+    '/:productId', 
+    authenticateSeller, 
+    upload.array('images', 7), 
+    updateProductValidator, 
+    updateProductDetails
+);
+
 export default productRouter;

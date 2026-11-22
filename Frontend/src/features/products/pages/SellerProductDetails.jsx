@@ -59,7 +59,7 @@ const extractVariantAttributes = (attrs) => {
 const SellerProductDetails = () => {
   const { productId } = useParams();
   const navigate = useNavigate();
-  const { handleGetProductById, handleAddProductVariant, handleDeleteProduct } = useProduct();
+  const { handleGetProductById, handleAddProductVariant, handleDeleteProduct, handleUpdateProduct } = useProduct();
   const user = useSelector((state) => state.auth?.user);
 
   const [product, setProduct] = useState(null);
@@ -76,6 +76,18 @@ const SellerProductDetails = () => {
   // Delete Product Modal & Loading State
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Edit Product Modal & Form State
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editPriceAmount, setEditPriceAmount] = useState('');
+  const [editPriceCurrency, setEditPriceCurrency] = useState('INR');
+  const [editExistingImages, setEditExistingImages] = useState([]);
+  const [editNewFiles, setEditNewFiles] = useState([]);
+  const [editModalError, setEditModalError] = useState('');
+  const editFileInputRef = useRef(null);
 
   // Modal Form State
   const [variantPrice, setVariantPrice] = useState('');
@@ -107,6 +119,67 @@ const SellerProductDetails = () => {
       const msg = err?.response?.data?.message || err?.message || 'Failed to delete product';
       showToast(`⚠️ ${msg}`);
       setIsDeleting(false);
+    }
+  };
+
+  const handleOpenEditModal = () => {
+    if (!product) return;
+    setEditTitle(product.title || '');
+    setEditDescription(product.description || '');
+    setEditPriceAmount(product.price?.amount || '');
+    setEditPriceCurrency(product.price?.currency || 'INR');
+    const imgs = (product.images || []).map((img) => resolveImageUrl(img)).filter(Boolean);
+    setEditExistingImages(imgs);
+    setEditNewFiles([]);
+    setEditModalError('');
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateSubmit = async (e) => {
+    if (e) e.preventDefault();
+    if (!editTitle.trim()) {
+      setEditModalError('Product title cannot be empty.');
+      return;
+    }
+    if (!editDescription.trim()) {
+      setEditModalError('Product description cannot be empty.');
+      return;
+    }
+    if (!editPriceAmount || isNaN(Number(editPriceAmount)) || Number(editPriceAmount) < 0) {
+      setEditModalError('Please enter a valid price amount.');
+      return;
+    }
+    if (editExistingImages.length === 0 && editNewFiles.length === 0) {
+      setEditModalError('Product must have at least one image.');
+      return;
+    }
+
+    setIsSubmittingEdit(true);
+    setEditModalError('');
+    try {
+      const formData = new FormData();
+      formData.append('title', editTitle.trim());
+      formData.append('description', editDescription.trim());
+      formData.append('priceAmount', editPriceAmount);
+      formData.append('priceCurrency', editPriceCurrency);
+      formData.append('existingImages', JSON.stringify(editExistingImages));
+
+      editNewFiles.forEach((file) => {
+        formData.append('images', file);
+      });
+
+      const res = await handleUpdateProduct(productId, formData);
+      if (res?.product) {
+        setProduct(res.product);
+      }
+      showToast('Product updated successfully!');
+      setIsEditModalOpen(false);
+    } catch (err) {
+      console.error('Failed to update product:', err);
+      const msg = err?.response?.data?.message || err?.message || 'Failed to update product.';
+      setEditModalError(msg);
+    } finally {
+      setIsSubmittingEdit(false);
     }
   };
 
@@ -478,6 +551,14 @@ const SellerProductDetails = () => {
           <div className="amz-spd-actions-right">
             <button
               type="button"
+              className="amz-spd-btn-primary"
+              onClick={handleOpenEditModal}
+              title="Edit Product Details"
+            >
+              ✏️ Edit Listing
+            </button>
+            <button
+              type="button"
               className="amz-spd-btn-accent"
               onClick={handleOpenAddVariantModal}
             >
@@ -562,15 +643,26 @@ const SellerProductDetails = () => {
 
         {/* Center Column: Listing Information & Variations */}
         <div className="amz-spd-card amz-spd-details-card">
-          <div>
-            <h1 className="amz-spd-title">{product.title || 'Untitled Product'}</h1>
-            <div className="amz-spd-meta-row" style={{ marginTop: '0.5rem' }}>
-              <span>ASIN: <strong style={{ color: '#0f1111' }}>{asin}</strong></span>
-              <span>•</span>
-              <span>SKU: <strong style={{ color: '#0f1111' }}>{sku}</strong></span>
-              <span>•</span>
-              <span>Condition: <strong>New</strong></span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
+            <div>
+              <h1 className="amz-spd-title">{product.title || 'Untitled Product'}</h1>
+              <div className="amz-spd-meta-row" style={{ marginTop: '0.5rem' }}>
+                <span>ASIN: <strong style={{ color: '#0f1111' }}>{asin}</strong></span>
+                <span>•</span>
+                <span>SKU: <strong style={{ color: '#0f1111' }}>{sku}</strong></span>
+                <span>•</span>
+                <span>Condition: <strong>New</strong></span>
+              </div>
             </div>
+            <button
+              type="button"
+              className="amz-spd-back-btn"
+              onClick={handleOpenEditModal}
+              title="Edit product title, price, description, images"
+              style={{ whiteSpace: 'nowrap' }}
+            >
+              ✏️ Edit Details
+            </button>
           </div>
 
           {/* Pricing Box */}
@@ -768,6 +860,14 @@ const SellerProductDetails = () => {
           <div className="amz-spd-card">
             <h3 className="amz-spd-section-title">Quick Actions</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+              <button
+                type="button"
+                className="amz-spd-btn-primary"
+                onClick={handleOpenEditModal}
+                style={{ justifyContent: 'center' }}
+              >
+                ✏️ Edit Product Details
+              </button>
               <button
                 type="button"
                 className="amz-spd-btn-accent"
@@ -1133,6 +1233,267 @@ const SellerProductDetails = () => {
                   disabled={isSubmittingVariant}
                 >
                   {isSubmittingVariant ? 'Adding Variant...' : '+ Add Variant to Listing'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ==============================================================
+          EDIT PRODUCT DETAILS MODAL
+          ============================================================== */}
+      {isEditModalOpen && (
+        <div
+          className="amz-spd-modal-overlay"
+          onClick={() => !isSubmittingEdit && setIsEditModalOpen(false)}
+        >
+          <div
+            className="amz-spd-modal-card"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '640px' }}
+          >
+            {/* Header */}
+            <div className="amz-spd-modal-header">
+              <div>
+                <span className="amz-spd-modal-badge">Listing Management</span>
+                <h2 className="amz-spd-modal-title">Edit Product Details</h2>
+                <div style={{ fontSize: '0.8rem', color: '#d5d9d9', marginTop: '0.2rem' }}>
+                  SKU: <strong>{sku}</strong> • ASIN: <strong>{asin}</strong>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="amz-spd-modal-close"
+                onClick={() => !isSubmittingEdit && setIsEditModalOpen(false)}
+                aria-label="Close modal"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Error banner */}
+            {editModalError && (
+              <div
+                style={{
+                  backgroundColor: '#fff0f0',
+                  borderLeft: '4px solid #b12704',
+                  padding: '0.75rem 1.5rem',
+                  color: '#b12704',
+                  fontSize: '0.85rem',
+                  fontWeight: 600
+                }}
+              >
+                ⚠️ {editModalError}
+              </div>
+            )}
+
+            {/* Modal Form */}
+            <form
+              onSubmit={handleUpdateSubmit}
+              style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+            >
+              <div className="amz-spd-modal-body" style={{ maxHeight: '68vh', overflowY: 'auto' }}>
+                {/* 1. Title */}
+                <div className="amz-spd-modal-section">
+                  <label className="amz-spd-field-label">Product Title *</label>
+                  <input
+                    type="text"
+                    className="amz-spd-input"
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    placeholder="Enter full product title"
+                    required
+                  />
+                </div>
+
+                {/* 2. Price and Currency */}
+                <div className="amz-spd-modal-section">
+                  <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '1rem' }}>
+                    <div className="amz-spd-field">
+                      <label className="amz-spd-field-label">Listing Price Amount *</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        className="amz-spd-input"
+                        value={editPriceAmount}
+                        onChange={(e) => setEditPriceAmount(e.target.value)}
+                        placeholder="e.g. 1599.00"
+                        required
+                      />
+                    </div>
+                    <div className="amz-spd-field">
+                      <label className="amz-spd-field-label">Currency</label>
+                      <select
+                        className="amz-spd-select"
+                        value={editPriceCurrency}
+                        onChange={(e) => setEditPriceCurrency(e.target.value)}
+                      >
+                        {CURRENCIES.map((c) => (
+                          <option key={c.code} value={c.code}>
+                            {c.code} ({c.symbol})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. Description */}
+                <div className="amz-spd-modal-section">
+                  <label className="amz-spd-field-label">Product Description *</label>
+                  <textarea
+                    className="amz-spd-input"
+                    rows={4}
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                    placeholder="Detailed specifications, features, bullet points..."
+                    required
+                    style={{ resize: 'vertical', minHeight: '90px' }}
+                  />
+                </div>
+
+                {/* 4. Images Section */}
+                <div className="amz-spd-modal-section">
+                  <label className="amz-spd-field-label">Current Product Images</label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', margin: '8px 0' }}>
+                    {editExistingImages.map((imgUrl, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          position: 'relative',
+                          width: '70px',
+                          height: '70px',
+                          borderRadius: '6px',
+                          border: '1px solid #d5d9d9',
+                          overflow: 'hidden',
+                          backgroundColor: '#f7fafa'
+                        }}
+                      >
+                        <img
+                          src={imgUrl}
+                          alt="preview"
+                          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setEditExistingImages(editExistingImages.filter((_, i) => i !== idx))
+                          }
+                          style={{
+                            position: 'absolute',
+                            top: 2,
+                            right: 2,
+                            background: 'rgba(0,0,0,0.65)',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '50%',
+                            width: '18px',
+                            height: '18px',
+                            cursor: 'pointer',
+                            fontSize: '10px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: 0
+                          }}
+                          title="Remove image"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* New Image Upload */}
+                  <label className="amz-spd-field-label" style={{ marginTop: '12px' }}>
+                    Upload Additional Images
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '6px' }}>
+                    <input
+                      type="file"
+                      ref={editFileInputRef}
+                      multiple
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files || []);
+                        if (files.length > 0) {
+                          setEditNewFiles((prev) => [...prev, ...files]);
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="amz-spd-btn-ghost"
+                      onClick={() => editFileInputRef.current?.click()}
+                    >
+                      📁 Browse Images
+                    </button>
+                    <span style={{ fontSize: '0.8rem', color: '#565959' }}>
+                      {editNewFiles.length > 0
+                        ? `${editNewFiles.length} new image(s) selected`
+                        : 'No new files chosen'}
+                    </span>
+                  </div>
+
+                  {/* Selected new files preview chips */}
+                  {editNewFiles.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
+                      {editNewFiles.map((f, i) => (
+                        <span
+                          key={i}
+                          style={{
+                            fontSize: '11px',
+                            background: '#e7f4f5',
+                            color: '#007185',
+                            padding: '2px 8px',
+                            borderRadius: '12px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                        >
+                          {f.name}
+                          <button
+                            type="button"
+                            onClick={() => setEditNewFiles(editNewFiles.filter((_, idx) => idx !== i))}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              cursor: 'pointer',
+                              color: '#c40000',
+                              fontSize: '11px',
+                              padding: 0
+                            }}
+                          >
+                            ✕
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="amz-spd-modal-footer">
+                <button
+                  type="button"
+                  className="amz-spd-btn-cancel"
+                  onClick={() => setIsEditModalOpen(false)}
+                  disabled={isSubmittingEdit}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="amz-spd-btn-primary"
+                  style={{ padding: '0.55rem 1.5rem', fontWeight: 700 }}
+                  disabled={isSubmittingEdit}
+                >
+                  {isSubmittingEdit ? 'Saving Changes...' : 'Save & Update Listing'}
                 </button>
               </div>
             </form>

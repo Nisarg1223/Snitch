@@ -1,4 +1,5 @@
-import {body,validationResult} from 'express-validator';
+import { body, param, validationResult } from 'express-validator';
+import mongoose from 'mongoose';
 
 function validateRequest(req,res,next){
     const errors = validationResult(req);
@@ -18,3 +19,15 @@ export const createProductValidator = [
     body("priceCurrency").notEmpty().withMessage("price currency is required"),
     validateRequest
 ]
+export const updateProductValidator = [
+    param("productId").custom((val) => {
+        if (!val || !mongoose.isValidObjectId(val)) {
+            throw new Error("Invalid product ID");
+        }
+        return true;
+    }),
+    body("title").optional().trim().notEmpty().withMessage("Title cannot be empty"),
+    body("description").optional().trim().notEmpty().withMessage("Description cannot be empty"),
+    body("priceAmount").optional().isNumeric().withMessage("Price amount must be a valid number"),
+    validateRequest
+];

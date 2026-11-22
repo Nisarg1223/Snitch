@@ -5,7 +5,8 @@ import {
     getAllProducts,
     getProductById,
     addProductVariant,
-    deleteProductById
+    deleteProductById,
+    updateProduct
 } from "../services/product.api.js";
 import { useDispatch } from "react-redux";
 import {
@@ -62,6 +63,15 @@ export const useProduct = () => {
         }
         return data;
     }, [dispatch]);
+
+    const handleUpdateProduct = useCallback(async (productId, formData) => {
+        const data = await updateProduct(productId, formData);
+        if (data?.success || data?.product) {
+            dispatch(updateSellerProduct(data));
+        }
+        return data;
+    }, [dispatch]);
+
     return {
         handleCreateProduct,
         handleGetSellerProduct,
@@ -69,6 +79,7 @@ export const useProduct = () => {
         handleGetProductById,
         handleAddProductVariant,
         handleAddVariant: handleAddProductVariant,
-        handleDeleteProduct
+        handleDeleteProduct,
+        handleUpdateProduct
     };
 };

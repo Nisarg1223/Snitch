@@ -69,3 +69,8 @@ export async function deleteProductById(productId) {
     const response = await productApiInstance.delete(`/${productId}`);
     return response.data;
 }
+//update the resource.
+export async function updateProduct(productId, formData) {
+    const response = await productApiInstance.patch(`/${productId}`, formData);
+    return response.data;
+}

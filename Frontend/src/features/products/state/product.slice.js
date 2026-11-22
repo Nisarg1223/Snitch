@@ -18,8 +18,8 @@ const productSlice = createSlice({
             state.currentProduct = action.payload;
         },
         updateSellerProduct: (state, action) => {
-            const updatedProduct = action.payload;
-            if (!updatedProduct) return;
+            const updatedProduct = action.payload?.product || action.payload;
+            if (!updatedProduct || !updatedProduct._id) return;
             state.sellerProducts = state.sellerProducts.map((p) =>
                 p._id === updatedProduct._id ? updatedProduct : p
             );

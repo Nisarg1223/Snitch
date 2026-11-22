@@ -266,3 +266,117 @@ export async function deleteProduct(req, res) {
     });
   }
 }
+
+export async function updateProductDetails(req, res) {
+  try {
+    const productId = req.params.productId || req.params.id;
+
+    // 1. Validate Product ID
+    if (!mongoose.isValidObjectId(productId)) {
+      return res.status(400).json({
+        message: "Invalid product ID",
+        success: false,
+      });
+    }
+
+    // 2. Ownership & Authorization Check (Only the seller who created it can update)
+    const product = await productModel.findOne({
+      _id: productId,
+      seller: req.user._id,
+    });
+
+    if (!product) {
+      return res.status(404).json({
+        message: "Product not found or unauthorized",
+        success: false,
+      });
+    }
+
+    const { title, description, priceAmount, priceCurrency } = req.body;
+
+    // 3. Update Text Fields (if provided)
+    if (title && title.trim()) {
+      product.title = title.trim();
+    }
+
+    if (description && description.trim()) {
+      product.description = description.trim();
+    }
+
+    // 4. Update Price (if provided)
+    if (priceAmount !== undefined && priceAmount !== null && priceAmount !== "") {
+      const numAmount = Number(priceAmount);
+      if (isNaN(numAmount) || numAmount < 0) {
+        return res.status(400).json({
+          message: "Price amount must be a valid positive number",
+          success: false,
+        });
+      }
+      product.price.amount = numAmount;
+    }
+
+    if (priceCurrency) {
+      product.price.currency = priceCurrency;
+    }
+
+    // 5. Handle Images (Keep selected existing images + upload any new files)
+    const files = req.files || [];
+    let newUploadedImages = [];
+
+    if (files.length > 0) {
+      newUploadedImages = await Promise.all(
+        files.map(async (file) => {
+          const image = await uploadFile({
+            buffer: file.buffer,
+            fileName: file.originalname,
+          });
+          return { url: image.url };
+        })
+      );
+    }
+
+    // If existing images list was sent or new files were uploaded
+    if (req.body.existingImages !== undefined || newUploadedImages.length > 0) {
+      let finalImages = [];
+
+      if (req.body.existingImages) {
+        try {
+          const existing =
+            typeof req.body.existingImages === "string"
+              ? JSON.parse(req.body.existingImages)
+              : req.body.existingImages;
+          if (Array.isArray(existing)) {
+            existing.forEach((img) => {
+              const url = typeof img === "string" ? img : img?.url;
+              if (url) finalImages.push({ url });
+            });
+          }
+        } catch (err) {
+          console.error("Error parsing existingImages:", err);
+        }
+      }
+
+      finalImages = [...finalImages, ...newUploadedImages];
+
+      // Only overwrite images array if at least one image remains
+      if (finalImages.length > 0) {
+        product.images = finalImages;
+      }
+    }
+
+    // 6. Save the updated product
+    await product.save();
+
+    return res.status(200).json({
+      message: "Product updated successfully",
+      success: true,
+      product,
+    });
+  } catch (error) {
+    console.error("Error in updateProductDetails:", error);
+    return res.status(500).json({
+      message: error.message || "Failed to update product details",
+      success: false,
+    });
+  }
+}
