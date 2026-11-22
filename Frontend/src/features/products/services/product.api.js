@@ -63,3 +63,9 @@ export async function addProductVariant(productId, variantData) {
     const response = await productApiInstance.post(`/${productId}/variants`, payload);
     return response.data;
 }
+
+// 🗑️ Delete product by ID (Seller only)
+export async function deleteProductById(productId) {
+    const response = await productApiInstance.delete(`/${productId}`);
+    return response.data;
+}

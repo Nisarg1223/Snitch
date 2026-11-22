@@ -51,6 +51,14 @@ const productSlice = createSlice({
                     state.currentProduct.varients.push(variant);
                 }
             }
+        },
+        removeProduct: (state, action) => {
+            const deletedId = action.payload?.deletedProductId || action.payload?._id || action.payload;
+            state.sellerProducts = state.sellerProducts.filter((p) => p._id !== deletedId);
+            state.products = state.products.filter((p) => p._id !== deletedId);
+            if (state.currentProduct && state.currentProduct._id === deletedId) {
+                state.currentProduct = null;
+            }
         }
     }
 });
@@ -60,7 +68,8 @@ export const {
     setProducts,
     setCurrentProduct,
     updateSellerProduct,
-    addVariantToProduct
+    addVariantToProduct,
+    removeProduct
 } = productSlice.actions;
 
 export default productSlice.reducer;

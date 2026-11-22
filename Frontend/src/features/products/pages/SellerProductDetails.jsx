@@ -59,7 +59,7 @@ const extractVariantAttributes = (attrs) => {
 const SellerProductDetails = () => {
   const { productId } = useParams();
   const navigate = useNavigate();
-  const { handleGetProductById, handleAddProductVariant } = useProduct();
+  const { handleGetProductById, handleAddProductVariant, handleDeleteProduct } = useProduct();
   const user = useSelector((state) => state.auth?.user);
 
   const [product, setProduct] = useState(null);
@@ -72,6 +72,10 @@ const SellerProductDetails = () => {
   const [isAddVariantModalOpen, setIsAddVariantModalOpen] = useState(false);
   const [isSubmittingVariant, setIsSubmittingVariant] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
+
+  // Delete Product Modal & Loading State
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Modal Form State
   const [variantPrice, setVariantPrice] = useState('');
@@ -88,6 +92,22 @@ const SellerProductDetails = () => {
     setTimeout(() => {
       setToastMessage(null);
     }, 3500);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      setIsDeleting(true);
+      await handleDeleteProduct(productId);
+      showToast('Product deleted successfully');
+      setTimeout(() => {
+        navigate('/seller/dashboard');
+      }, 1200);
+    } catch (err) {
+      console.error('Failed to delete product:', err);
+      const msg = err?.response?.data?.message || err?.message || 'Failed to delete product';
+      showToast(`⚠️ ${msg}`);
+      setIsDeleting(false);
+    }
   };
 
   useEffect(() => {
@@ -466,6 +486,14 @@ const SellerProductDetails = () => {
             <Link to="/create-product" className="amz-spd-btn-primary">
               + Add Similar Product
             </Link>
+            <button
+              type="button"
+              className="amz-spd-btn-danger"
+              onClick={() => setIsDeleteModalOpen(true)}
+              title="Delete this product"
+            >
+              🗑️ Delete Product
+            </button>
           </div>
         </div>
       </section>
@@ -763,6 +791,14 @@ const SellerProductDetails = () => {
               >
                 + Add Another Product
               </Link>
+              <button
+                type="button"
+                className="amz-spd-btn-danger"
+                onClick={() => setIsDeleteModalOpen(true)}
+                style={{ justifyContent: 'center', marginTop: '0.25rem' }}
+              >
+                🗑️ Delete Product
+              </button>
             </div>
           </div>
         </div>
@@ -1100,6 +1136,74 @@ const SellerProductDetails = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ==============================================================
+          DELETE PRODUCT CONFIRMATION MODAL
+          ============================================================== */}
+      {isDeleteModalOpen && (
+        <div
+          className="amz-spd-modal-overlay"
+          onClick={() => !isDeleting && setIsDeleteModalOpen(false)}
+        >
+          <div
+            className="amz-spd-modal-card"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '440px' }}
+          >
+            <div className="amz-spd-modal-header" style={{ borderBottom: '1px solid #e7e7e7' }}>
+              <h2 style={{ color: '#c40000', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, fontSize: '1.15rem' }}>
+                <span>⚠️</span> Delete Product
+              </h2>
+              <button
+                type="button"
+                className="amz-spd-modal-close"
+                onClick={() => !isDeleting && setIsDeleteModalOpen(false)}
+                aria-label="Close modal"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ padding: '18px 20px', fontSize: '14px', color: '#0f1111', lineHeight: '1.5' }}>
+              <p style={{ margin: '0 0 10px 0' }}>
+                Are you sure you want to permanently delete <strong>"{product?.title || 'this product'}"</strong>?
+              </p>
+              <p style={{ margin: 0, color: '#565959', fontSize: '13px' }}>
+                This listing and all its associated variants will be removed from the catalog. This action cannot be undone.
+              </p>
+            </div>
+
+            <div
+              className="amz-spd-modal-footer"
+              style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '10px',
+                padding: '14px 20px',
+                borderTop: '1px solid #e7e7e7',
+                backgroundColor: '#f7fafa'
+              }}
+            >
+              <button
+                type="button"
+                className="amz-spd-back-btn"
+                onClick={() => setIsDeleteModalOpen(false)}
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="amz-spd-btn-danger-solid"
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Deleting...' : 'Yes, Delete Product'}
+              </button>
+            </div>
           </div>
         </div>
       )}

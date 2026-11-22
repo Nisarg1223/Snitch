@@ -4,7 +4,8 @@ import {
     getSellerProduct,
     getAllProducts,
     getProductById,
-    addProductVariant
+    addProductVariant,
+    deleteProductById
 } from "../services/product.api.js";
 import { useDispatch } from "react-redux";
 import {
@@ -12,7 +13,8 @@ import {
     setProducts,
     setCurrentProduct,
     updateSellerProduct,
-    addVariantToProduct
+    addVariantToProduct,
+    removeProduct
 } from "../state/product.slice.js";
 
 export const useProduct = () => {
@@ -51,13 +53,22 @@ export const useProduct = () => {
         }
         return data;
     }, [dispatch]);
-
+        const handleDeleteProduct = useCallback(async (productId) => {
+        // 1. Call the API function first
+        const data = await deleteProductById(productId);
+        // 2. Only dispatch if the API responded with success and data
+        if (data?.success || data) {
+            dispatch(removeProduct(data)); // 👈 Dispatch the actual response data
+        }
+        return data;
+    }, [dispatch]);
     return {
         handleCreateProduct,
         handleGetSellerProduct,
         handleGetProducts,
         handleGetProductById,
         handleAddProductVariant,
-        handleAddVariant: handleAddProductVariant
+        handleAddVariant: handleAddProductVariant,
+        handleDeleteProduct
     };
 };
