@@ -8,6 +8,7 @@ import ProductDetail from './features/products/pages/ProductDetail.jsx';
 import SellerProductDetails from './features/products/pages/SellerProductDetails.jsx';
 import Cart from './features/cart/pages/Cart.jsx';
 import Applayout from './Applayout.jsx';
+import NotFound from './features/shared/pages/NotFound.jsx';
 
 const AllRoutes = () => {
   return (
@@ -24,6 +25,8 @@ const AllRoutes = () => {
             </Protected>
           }
         />
+        {/* Wildcard route for 404 / not found */}
+        <Route path="*" element={<NotFound />} />
       </Route>
 
       <Route path="/login" element={<Login />} />

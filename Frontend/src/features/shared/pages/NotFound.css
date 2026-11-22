@@ -1,0 +1,216 @@
+/* ============================================================
+   AMAZON / SNITCH 404 NOT FOUND PAGE (FULLY RESPONSIVE)
+   ============================================================ */
+.amz-notfound-page {
+  min-height: calc(100vh - 60px);
+  min-height: calc(100dvh - 60px);
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+.amz-notfound-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(24px, 5vw, 60px) 16px clamp(32px, 6vw, 70px);
+  text-align: center;
+  background-color: #ffffff;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Video Wrapper: fluid & centered, maintaining aspect ratio */
+.amz-notfound-video-wrap {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  overflow: hidden;
+  background-color: #ffffff;
+  box-sizing: border-box;
+}
+
+.amz-notfound-video {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  background-color: #ffffff;
+  border: none;
+  outline: none;
+  filter: opacity(0.999);
+  transform: translateZ(0);
+}
+
+/* Solid white edge mask overlays to cleanly cover video encoding border artifacts */
+.amz-video-edge-mask {
+  position: absolute;
+  background-color: #ffffff;
+  pointer-events: none;
+  z-index: 50;
+}
+
+.amz-video-edge-mask.right {
+  top: 0;
+  bottom: 0;
+  right: -2px;
+  width: clamp(20px, 5vw, 32px);
+}
+
+.amz-video-edge-mask.left {
+  top: 0;
+  bottom: 0;
+  left: -2px;
+  width: 6px;
+}
+
+.amz-video-edge-mask.top {
+  top: -2px;
+  left: 0;
+  right: 0;
+  height: 6px;
+}
+
+.amz-video-edge-mask.bottom {
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 6px;
+}
+
+/* Fluid Responsive Typography */
+.amz-notfound-code {
+  font-size: clamp(48px, 12vw, 68px);
+  font-weight: 900;
+  color: #0f1111;
+  margin: clamp(8px, 2vw, 14px) 0 4px;
+  line-height: 1;
+  letter-spacing: -1.5px;
+}
+
+.amz-notfound-title {
+  font-size: clamp(20px, 5vw, 26px);
+  font-weight: 700;
+  color: #0f1111;
+  margin: 0 0 8px;
+  letter-spacing: -0.3px;
+  padding: 0 10px;
+}
+
+.amz-notfound-subtext {
+  font-size: clamp(13px, 3.5vw, 15px);
+  color: #565959;
+  margin: 0 auto clamp(20px, 4vw, 26px);
+  font-weight: 400;
+  max-width: 420px;
+  line-height: 1.5;
+  padding: 0 12px;
+}
+
+/* Responsive Pill Button with Touch Accessibility */
+.amz-notfound-home-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: #f08804;
+  color: #ffffff !important;
+  font-size: clamp(14px, 3.5vw, 15px);
+  font-weight: 600;
+  padding: 12px clamp(24px, 6vw, 36px);
+  min-height: 44px;
+  border-radius: 9999px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(240, 136, 4, 0.3);
+  transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  touch-action: manipulation;
+  box-sizing: border-box;
+}
+
+.amz-notfound-home-btn:hover {
+  background-color: #df7a00;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(240, 136, 4, 0.4);
+}
+
+.amz-notfound-home-btn:active {
+  transform: scale(0.98);
+}
+
+.amz-notfound-arrow {
+  font-size: 16px;
+  line-height: 1;
+  transition: transform 0.15s ease;
+}
+
+.amz-notfound-home-btn:hover .amz-notfound-arrow {
+  transform: translateX(-3px);
+}
+
+/* ============================================================
+   RESPONSIVE MEDIA QUERIES
+   ============================================================ */
+
+/* Tablet (<= 768px) */
+@media (max-width: 768px) {
+  .amz-notfound-main {
+    padding: 30px 16px 50px;
+  }
+
+  .amz-notfound-video-wrap {
+    max-width: 380px;
+  }
+}
+
+/* Mobile Devices (<= 480px) */
+@media (max-width: 480px) {
+  .amz-notfound-main {
+    padding: 24px 12px 40px;
+  }
+
+  .amz-notfound-video-wrap {
+    max-width: 300px;
+  }
+
+  .amz-notfound-code {
+    letter-spacing: -1px;
+  }
+
+  .amz-notfound-subtext {
+    max-width: 290px;
+  }
+
+  .amz-notfound-home-btn {
+    width: 100%;
+    max-width: 240px;
+  }
+}
+
+/* Extra Small Screens (<= 340px) */
+@media (max-width: 340px) {
+  .amz-notfound-video-wrap {
+    max-width: 250px;
+  }
+
+  .amz-notfound-code {
+    font-size: 42px;
+  }
+
+  .amz-notfound-title {
+    font-size: 18px;
+  }
+
+  .amz-notfound-home-btn {
+    max-width: 210px;
+    padding: 10px 18px;
+  }
+}

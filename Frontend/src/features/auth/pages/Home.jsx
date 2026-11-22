@@ -4,6 +4,8 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { setUser } from '../state/auth.slice.js';
 import { useProduct } from '../../products/hooks/useProduct.js';
 import { useCart } from '../../cart/hook/useCart.js';
+import notFoundVideo from '../../../assets/not_found_video.mp4';
+import '../../shared/pages/NotFound.css';
 import './Home.css';
 
 const Home = () => {
@@ -472,6 +474,30 @@ const Home = () => {
                   </div>
                 );
               })}
+            </div>
+          ) : searchQuery ? (
+            <div style={{ textAlign: 'center', padding: 'clamp(20px, 4vw, 36px) 16px', width: '100%', boxSizing: 'border-box' }}>
+              <div className="amz-notfound-video-wrap">
+                <video
+                  src={notFoundVideo || '/not_found_video.mp4'}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="amz-notfound-video"
+                />
+                {/* Mask to eliminate any black line artifact on video edges */}
+                <div className="amz-video-edge-mask right"></div>
+                <div className="amz-video-edge-mask left"></div>
+                <div className="amz-video-edge-mask top"></div>
+                <div className="amz-video-edge-mask bottom"></div>
+              </div>
+              <h3 style={{ fontSize: 'clamp(18px, 4.5vw, 22px)', fontWeight: '700', marginTop: '14px', color: '#0f1111', padding: '0 8px' }}>
+                Oops! No items found matching "{searchQuery}"
+              </h3>
+              <p style={{ color: '#565959', fontSize: 'clamp(13px, 3.2vw, 14px)', marginTop: '6px', padding: '0 12px', maxWidth: '420px', margin: '6px auto 0', lineHeight: 1.5 }}>
+                Try checking your spelling or search with different keywords.
+              </p>
             </div>
           ) : (
             <div className="amz-empty-shelf">
