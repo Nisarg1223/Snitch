@@ -17,4 +17,6 @@ cartRouter.patch('/quantity/decrement/:productId', authenticateUser, validateDec
 // 🗑️ Delete item from cart (with & without variantId)
 cartRouter.delete('/remove/:productId/:variantId', authenticateUser, validateDeleteCartItem, deleteCartItem);
 cartRouter.delete('/remove/:productId', authenticateUser, validateDeleteCartItem, deleteCartItem);
+//payment.
+cartRouter.post("/payment/create/order",authenticateUser);
 export default cartRouter;

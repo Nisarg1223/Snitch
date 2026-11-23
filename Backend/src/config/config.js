@@ -24,12 +24,19 @@ if (!process.env.IMAGEKIT_PRIVATE_KEY) {
 if (!process.env.IMAGEKIT_PUBLIC_KEY) {
     throw new Error("imagekit public key is not defined in the environmental variable");
 }
-
+if(!process.env.RAZORPAY_KEY_ID){
+    throw new Error("RAZOR_PAY_ID is not defined in the environment variables");
+}
+if(!process.env.RAZORPAY_KEY_SCRET){
+    throw new Error("RAZORPAY_KEY_SECRET is not defined in the environment variables");
+}
 export const config = {
     MONGO_URI: process.env.MONGO_URI,
     JWT_SECRET: process.env.JWT_SECRET,
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
     IMAGEKIT_PRIVATE_KEY: process.env.IMAGEKIT_PRIVATE_KEY,
-    IMAGEKIT_PUBLIC_KEY: process.env.IMAGEKIT_PUBLIC_KEY
+    IMAGEKIT_PUBLIC_KEY: process.env.IMAGEKIT_PUBLIC_KEY,
+    RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
+    RAZORPAY_KEY_SCRET:process.env.RAZORPAY_KEY_SCRET
 };

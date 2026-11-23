@@ -24,6 +24,7 @@
     "mongoose": "^9.9.3",
     "multer": "^2.4.0",
     "passport": "^0.7.0",
-    "passport-google-oauth20": "^2.0.0"
+    "passport-google-oauth20": "^2.0.0",
+    "razorpay": "^2.9.8"
   }
 }
